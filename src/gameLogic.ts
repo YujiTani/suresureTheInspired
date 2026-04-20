@@ -1,4 +1,14 @@
-/// <reference path="./types.ts" />
+import type {
+  Card,
+  Player,
+  Enemy,
+  EnemyAction,
+  CombatantState,
+  PlayerBattleState,
+  EnemyBattleState,
+  BattleState,
+  TurnPhase,
+} from './types';
 
 const INITIAL_ENERGY = 3;
 const INITIAL_HAND_SIZE = 5;
@@ -69,9 +79,22 @@ export function initBattle(player: Player, playerDeck: Card[], enemies: Enemy[])
 // --- Card Operations ---
 
 // TODO(human): デッキからcount枚引く。デッキが空なら捨て札をシャッフルしてデッキに戻す。
-// ヒント: INITIAL_HAND_SIZE や shuffle() を活用できます。
 export function drawCards(playerState: PlayerBattleState, count: number): PlayerBattleState {
-  throw new Error('Not implemented');
+  let { hand, deck, discardPile } = playerState;
+  const drawCount = Math.min(count, playerState.deck.length)
+  hand = [...hand, ...deck.slice(0, drawCount)];
+  deck = playerState.deck.slice(drawCount);
+
+  if (drawCount < count) {
+    const newDeck = shuffle(discardPile);
+    deck = newDeck;
+    discardPile = [];
+    const additionalDrawCount = Math.min(count - drawCount, deck.length);
+    hand = [...hand, ...deck.slice(0, additionalDrawCount)];
+    deck = deck.slice(additionalDrawCount);
+  }
+
+  return { ...playerState, hand, deck, discardPile }
 }
 
 // TODO(human): 手札の handIndex 番目のカードを使用する。
@@ -99,14 +122,29 @@ export function applyCardEffects(state: BattleState, card: Card, targetEnemyInde
 // ② drawCards() で5枚引く
 // ③ currentEnergy を INITIAL_ENERGY にリセット
 export function startPlayerTurn(state: BattleState): BattleState {
-  throw new Error('Not implemented');
+  return {
+    ...state,
+    playerState: {
+      ...drawCards(state.playerState, INITIAL_HAND_SIZE),
+      shield: 0,
+      currentEnergy: INITIAL_ENERGY,
+    },
+  }
 }
 
 // TODO(human): プレイヤーターン終了処理
 // ① 手札を全て捨て札へ移す
 // ② phase を 'EnemyTurn' に変更
 export function endPlayerTurn(state: BattleState): BattleState {
-  throw new Error('Not implemented');
+  return {
+    ...state,
+    playerState: {
+      ...state.playerState,
+      hand: [],
+      discardPile: [...state.playerState.discardPile, ...state.playerState.hand],
+    },
+    phase: 'EnemyTurn',
+  }
 }
 
 // TODO(human): 各敵の nextAction を実行し、次の行動を selectNextEnemyAction() で決める

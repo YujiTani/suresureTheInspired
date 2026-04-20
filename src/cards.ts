@@ -1,4 +1,4 @@
-/// <reference path="./types.ts" />
+import type { Card } from './types';
 
 // --- Attack Cards (5) ---
 

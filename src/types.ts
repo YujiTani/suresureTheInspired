@@ -1,13 +1,13 @@
-type Attribute = 'Attack' | 'Defense' | 'Skill';
-type TargetType = 'Single' | 'All' | 'Random';
-type StatusEffect = 'HP' | 'AttackPower' | 'DefensePower' | 'DeckDraw' | 'DiscardDraw' | 'ActionCount';
-type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic';
-type TurnPhase = 'PlayerTurn' | 'EnemyTurn' | 'Victory' | 'Defeat';
-type EnemyStrength = 'Weak' | 'Strong' | 'Elite' | 'Boss' | 'FinalBoss';
-type EnemyActionType = 'Attack' | 'QuickAttack' | 'Buff' | 'Debuff' | 'Heal' | 'Summon';
-type DropType = 'Card' | 'Item' | 'Gold';
+export type Attribute = 'Attack' | 'Defense' | 'Skill';
+export type TargetType = 'Single' | 'All' | 'Random';
+export type StatusEffect = 'HP' | 'AttackPower' | 'DefensePower' | 'DeckDraw' | 'DiscardDraw' | 'ActionCount';
+export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic';
+export type TurnPhase = 'PlayerTurn' | 'EnemyTurn' | 'Victory' | 'Defeat';
+export type EnemyStrength = 'Weak' | 'Strong' | 'Elite' | 'Boss' | 'FinalBoss';
+export type EnemyActionType = 'Attack' | 'QuickAttack' | 'Buff' | 'Debuff' | 'Heal' | 'Summon';
+export type DropType = 'Card' | 'Item' | 'Gold';
 
-interface Card {
+export interface Card {
   cost: number;
   name: string;
   attribute: Attribute;
@@ -20,27 +20,27 @@ interface Card {
   evolvedCard?: Card;
 }
 
-interface Player {
+export interface Player {
   name: string;
   maxHp: number;
   startDeckNo: number;
   illustrationUrl: string | null;
 }
 
-interface EnemyAction {
+export interface EnemyAction {
   type: EnemyActionType;
   value: number;
   probability: number;
 }
 
-interface DropTableEntry {
+export interface DropTableEntry {
   type: DropType;
   name: string;
   rarity: Rarity;
   probability: number;
 }
 
-interface Enemy {
+export interface Enemy {
   name: string;
   maxHp: number;
   illustrationUrl: string | null;
@@ -49,12 +49,12 @@ interface Enemy {
   dropTable: DropTableEntry[];
 }
 
-interface CombatantState {
+export interface CombatantState {
   currentHp: number;
   shield: number;
 }
 
-interface PlayerBattleState extends CombatantState {
+export interface PlayerBattleState extends CombatantState {
   currentEnergy: number;
   hand: Card[];
   deck: Card[];
@@ -63,12 +63,12 @@ interface PlayerBattleState extends CombatantState {
   defensePower: number;
 }
 
-interface EnemyBattleState extends CombatantState {
+export interface EnemyBattleState extends CombatantState {
   enemy: Enemy;
   nextAction: EnemyAction | null;
 }
 
-interface BattleState {
+export interface BattleState {
   player: Player;
   playerState: PlayerBattleState;
   enemies: EnemyBattleState[];
@@ -76,7 +76,7 @@ interface BattleState {
   phase: TurnPhase;
 }
 
-interface RunState {
+export interface RunState {
   player: Player;
   currentHp: number;
   currentFloor: number;
