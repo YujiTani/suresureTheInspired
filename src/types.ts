@@ -1,4 +1,5 @@
 type Attribute = 'Attack' | 'Defense' | 'Skill';
+type TargetType = 'Single' | 'All' | 'Random';
 type StatusEffect = 'HP' | 'AttackPower' | 'DefensePower' | 'DeckDraw' | 'DiscardDraw' | 'ActionCount';
 type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic';
 type TurnPhase = 'PlayerTurn' | 'EnemyTurn' | 'Victory' | 'Defeat';
@@ -14,6 +15,9 @@ interface Card {
   illustrationUrl: string | null;
   rarity: Rarity;
   description: string;
+  target: TargetType;
+  hitCount?: number;
+  evolvedCard?: Card;
 }
 
 interface Player {
@@ -55,6 +59,8 @@ interface PlayerBattleState extends CombatantState {
   hand: Card[];
   deck: Card[];
   discardPile: Card[];
+  attackPower: number;
+  defensePower: number;
 }
 
 interface EnemyBattleState extends CombatantState {
