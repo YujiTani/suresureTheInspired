@@ -165,5 +165,13 @@ export function selectNextEnemyAction(enemy: Enemy): EnemyAction {
 // プレイヤーの currentHp が 0 → 'Defeat'
 // それ以外 → 現在の phase をそのまま返す
 export function checkBattleResult(state: BattleState): TurnPhase {
-  throw new Error('Not implemented');
+  if (state.enemies.every(enemy => enemy.currentHp <= 0)) {
+    return 'Victory';
+  }
+
+  if (state.playerState.currentHp <= 0) {
+    return 'Defeat';
+  }
+
+  return state.phase;
 }
