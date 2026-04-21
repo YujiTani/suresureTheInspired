@@ -50,7 +50,7 @@ export function initBattle(player: Player, playerDeck: Card[], enemies: Enemy[])
   const deck = shuffledDeck.slice(INITIAL_HAND_SIZE);
 
   const playerState: PlayerBattleState = {
-    currentHp: 0,
+    currentHp: player.maxHp,
     shield: 0,
     currentEnergy: INITIAL_ENERGY,
     hand,
