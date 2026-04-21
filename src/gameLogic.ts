@@ -24,9 +24,9 @@ export function shuffle<T>(array: T[]): T[] {
   return result;
 }
 
-export function dealDamage(target: CombatantState, amount: number): CombatantState {
-  const shieldDamage = Math.min(target.shield, amount);
-  const hpDamage = amount - shieldDamage;
+export function dealDamage(target: CombatantState, damage: number): CombatantState {
+  const shieldDamage = Math.min(target.shield, damage);
+  const hpDamage = damage - shieldDamage;
   return {
     ...target,
     shield: target.shield - shieldDamage,
@@ -102,7 +102,23 @@ export function drawCards(playerState: PlayerBattleState, count: number): Player
 // ② applyCardEffects() で効果を適用
 // ③ 使ったカードを手札から捨て札へ移す
 export function playCard(state: BattleState, handIndex: number, targetEnemyIndex?: number): BattleState {
-  throw new Error('Not implemented');
+  const card = state.playerState.hand[handIndex];
+
+  if (state.playerState.currentEnergy < card.cost) {
+    return state;
+  }
+
+  const newState = applyCardEffects(state, card, targetEnemyIndex);
+
+  return {
+    ...newState,
+    playerState: {
+      ...newState.playerState,
+      currentEnergy: newState.playerState.currentEnergy - card.cost,
+      hand: newState.playerState.hand.filter((_, index) => index !== handIndex),
+      discardPile: [...newState.playerState.discardPile, card],
+    },
+  }
 }
 
 // TODO(human): card の effects を全て適用する。
@@ -112,7 +128,45 @@ export function playCard(state: BattleState, handIndex: number, targetEnemyIndex
 // AttackPower/DefensePower → playerState.attackPower/defensePower を更新
 // hitCount がある場合は damage を hitCount 回適用する
 export function applyCardEffects(state: BattleState, card: Card, targetEnemyIndex?: number): BattleState {
-  throw new Error('Not implemented');
+  switch (card.attribute) {
+    case 'Attack':
+      for (const [effect, value] of Object.entries(card.effects)) {
+        if (effect === "HP") {
+          if (targetEnemyIndex === undefined) {
+            let newEnemies: EnemyBattleState[] = [];
+
+            switch (card.target) {
+              case "All":
+                newEnemies = state.enemies.map((enemy) => {
+                  return dealDamage(enemy, Math.abs(value));
+                }
+                return { ...state, enemies: newEnemies };
+
+              case "Random":
+                const randomIndex = Math.floor(Math.random() * state.enemies.length);
+                newEnemies = state.enemies.map((enemy, index) => {
+                  if (index === randomIndex) {
+                    return dealDamage(enemy, Math.abs(value));
+                  } else {
+                    return enemy;
+                  }
+                }
+                return { ...state, enemies: newEnemies };
+            }
+          } else {
+            const newEnemies = state.enemies.map((enemy, index) => {
+              if (index === targetEnemyIndex) {
+                return dealDamage(enemy, Math.abs(value));
+              } else {
+                return enemy;
+              }
+            });
+            return { ...state, enemies: newEnemies };
+          }
+          break;
+    case 'Defense':
+    case 'Skill':
+  }
 }
 
 // --- Turn Processing ---
