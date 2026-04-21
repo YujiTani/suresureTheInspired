@@ -34,8 +34,8 @@ export function dealDamage(target: CombatantState, damage: number): CombatantSta
   };
 }
 
-export function addShield(target: CombatantState, amount: number): CombatantState {
-  return { ...target, shield: target.shield + amount };
+export function addShield(target: CombatantState, shield: number): CombatantState {
+  return { ...target, shield: target.shield + shield };
 }
 
 export function healHp(target: CombatantState, amount: number, maxHp: number): CombatantState {
@@ -165,8 +165,32 @@ export function applyCardEffects(state: BattleState, card: Card, targetEnemyInde
           }
           break;
     case 'Defense':
+      let currentState = state;
+      for (const [effect, value] of Object.entries(card.effects)) {
+        if (effect === "HP") {
+          currentState = { ...currentState, playerState: addShield(currentState.playerState, value) as PlayerBattleState };
+        } else if (effect === "DeckDraw") {
+          currentState = { ...currentState, playerState: drawCards(currentState.playerState, value) };
+        } else if (effect === "AttackPower") {
+          const newPlayerState = {
+            ...currentState.playerState,
+            attackPower: currentState.playerState.attackPower + value,
+          };
+          currentState = { ...currentState, playerState: newPlayerState as PlayerBattleState };
+        } else if (effect === "DefensePower") {
+          const newPlayerState = {
+            ...currentState.playerState,
+            defensePower: currentState.playerState.defensePower + value,
+          }
+
+          currentState = { ...currentState, playerState: newPlayerState as PlayerBattleState };
+        }
+      }
+      return currentState;
     case 'Skill':
+      break;
   }
+  return state;
 }
 
 // --- Turn Processing ---
