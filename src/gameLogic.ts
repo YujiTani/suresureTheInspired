@@ -97,10 +97,6 @@ export function drawCards(playerState: PlayerBattleState, count: number): Player
   return { ...playerState, hand, deck, discardPile }
 }
 
-// TODO(human): 手札の handIndex 番目のカードを使用する。
-// ① エネルギーが足りなければ何もしない
-// ② applyCardEffects() で効果を適用
-// ③ 使ったカードを手札から捨て札へ移す
 export function playCard(state: BattleState, handIndex: number, targetEnemyIndex?: number): BattleState {
   const card = state.playerState.hand[handIndex];
 
@@ -109,6 +105,11 @@ export function playCard(state: BattleState, handIndex: number, targetEnemyIndex
   }
 
   const newState = applyCardEffects(state, card, targetEnemyIndex);
+
+  const result = checkBattleResult(newState);
+  if (result === "Victory" || result === "Defeat") {
+    return { ...newState, phase: result };
+  }
 
   return {
     ...newState,
@@ -225,15 +226,64 @@ export function endPlayerTurn(state: BattleState): BattleState {
   }
 }
 
-// TODO(human): 各敵の nextAction を実行し、次の行動を selectNextEnemyAction() で決める
 export function executeEnemyTurn(state: BattleState): BattleState {
-  throw new Error('Not implemented');
+  let currentState = state;
+
+  for (const enemyState of currentState.enemies) {
+    if (enemyState.nextAction === null) continue;
+
+    const action = enemyState.nextAction;
+
+    switch (action.type) {
+      case "Attack":
+      case "QuickAttack":
+        currentState = { ...currentState, playerState: dealDamage(currentState.playerState, action.value) as PlayerBattleState };
+        break;
+
+      case "Buff":
+        currentState = {
+          ...currentState,
+          enemies: currentState.enemies.map((enemy) => {
+            if (enemy === enemyState) {
+              return addShield(enemy, action.value) as EnemyBattleState;
+            }
+            return enemy;
+          }),
+        };
+        break;
+    }
+
+    const result = checkBattleResult(currentState);
+    if (result === "Victory" || result === "Defeat") {
+      return { ...currentState, phase: result };
+    }
+
+    // 次の行動を決定する（selectNextEnemyAction を使う）
+    currentState = {
+      ...currentState,
+      enemies: currentState.enemies.map((e) =>
+        e === enemyState
+          ? { ...e, nextAction: selectNextEnemyAction(e.enemy) }
+          : e
+      ),
+    };
+  }
+
+  return { ...currentState, phase: 'PlayerTurn', turn: currentState.turn + 1 };
 }
 
-// TODO(human): probability に従って敵の次の行動をランダム抽選する
-// ヒント: Math.random() と probability の合計で区間を作る（ルーレット選択）
 export function selectNextEnemyAction(enemy: Enemy): EnemyAction {
-  throw new Error('Not implemented');
+  const roll = Math.random();
+  let cumulative = 0;
+
+  for (const action of enemy.enemyActions) {
+    cumulative += action.probability;
+    if (roll < cumulative) {
+      return action;
+    }
+  }
+
+  return enemy.enemyActions[0]
 }
 
 // --- Game State Check ---
