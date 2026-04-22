@@ -8,6 +8,7 @@ import type {
   EnemyBattleState,
   BattleState,
   TurnPhase,
+  StatusEffect,
 } from './types';
 
 const INITIAL_ENERGY = 3;
@@ -42,6 +43,108 @@ export function healHp(target: CombatantState, amount: number, maxHp: number): C
   return { ...target, currentHp: Math.min(maxHp, target.currentHp + amount) };
 }
 
+export function calculateDamage(baseDamage: number, attackerWeak: number, targetVulnerable: number): number {
+  let currentDamage = baseDamage;
+  if (attackerWeak >= 1) {
+    currentDamage = Math.floor(currentDamage * 0.75);
+  }
+
+  if (targetVulnerable >= 1) {
+    currentDamage = Math.floor(currentDamage * 1.5);
+  }
+
+  return currentDamage;
+}
+
+function applyEffectToPlayer(state: BattleState, effect: StatusEffect, value: number): BattleState {
+  const p = state.playerState;
+  switch (effect) {
+    case 'HP':
+      return value < 0
+        ? { ...state, playerState: dealDamage(p, Math.abs(value)) as PlayerBattleState }
+        : { ...state, playerState: healHp(p, value, state.player.maxHp) as PlayerBattleState };
+    case 'Shield':
+      return { ...state, playerState: addShield(p, value) as PlayerBattleState };
+    case 'DeckDraw':
+      return { ...state, playerState: drawCards(p, value) };
+    case 'AttackPower':
+      return { ...state, playerState: { ...p, attackPower: p.attackPower + value } };
+    case 'DefensePower':
+      return { ...state, playerState: { ...p, defensePower: p.defensePower + value } };
+    case 'Ki':
+      return { ...state, playerState: { ...p, ki: Math.max(0, p.ki + value) } };
+    case 'Weak':
+      return { ...state, playerState: { ...p, weak: Math.max(0, p.weak + value) } };
+    case 'Vulnerable':
+      return { ...state, playerState: { ...p, vulnerable: Math.max(0, p.vulnerable + value) } };
+    case 'Phantom':
+      return { ...state, playerState: { ...p, phantom: Math.max(0, p.phantom + value) } };
+    case 'ActionCount':
+      return { ...state, playerState: { ...p, actionCount: p.actionCount + value } };
+    case 'DiscardDraw':
+      return { ...state, playerState: { ...p, discardDrawDelta: p.discardDrawDelta + value } };
+    default:
+      return state;
+  }
+}
+
+function applyEffectToEnemy(
+  enemy: EnemyBattleState,
+  effect: StatusEffect,
+  value: number,
+  attackerWeak: number
+): EnemyBattleState {
+  switch (effect) {
+    case 'HP': {
+      const dmg = calculateDamage(Math.abs(value), attackerWeak, enemy.vulnerable);
+      return dealDamage(enemy, dmg) as EnemyBattleState;
+    }
+    case 'Weak':
+      return { ...enemy, weak: Math.max(0, enemy.weak + value) };
+    case 'Vulnerable':
+      return { ...enemy, vulnerable: Math.max(0, enemy.vulnerable + value) };
+    default:
+      return enemy;
+  }
+}
+
+function applyEffectToTarget(
+  state: BattleState,
+  effect: StatusEffect,
+  value: number,
+  target: Card['target'],
+  targetEnemyIndex?: number
+): BattleState {
+  const attackerWeak = state.playerState.weak;
+  switch (target) {
+    case 'Player':
+      return applyEffectToPlayer(state, effect, value);
+    case 'All':
+      return {
+        ...state,
+        enemies: state.enemies.map((e) => applyEffectToEnemy(e, effect, value, attackerWeak)),
+      };
+    case 'Random': {
+      const idx = Math.floor(Math.random() * state.enemies.length);
+      return {
+        ...state,
+        enemies: state.enemies.map((e, i) =>
+          i === idx ? applyEffectToEnemy(e, effect, value, attackerWeak) : e
+        ),
+      };
+    }
+    case 'Single':
+    default:
+      if (targetEnemyIndex === undefined) return state;
+      return {
+        ...state,
+        enemies: state.enemies.map((e, i) =>
+          i === targetEnemyIndex ? applyEffectToEnemy(e, effect, value, attackerWeak) : e
+        ),
+      };
+  }
+}
+
 // --- Battle Init (Claude) ---
 
 export function initBattle(player: Player, playerDeck: Card[], enemies: Enemy[]): BattleState {
@@ -58,6 +161,12 @@ export function initBattle(player: Player, playerDeck: Card[], enemies: Enemy[])
     discardPile: [],
     attackPower: 0,
     defensePower: 0,
+    ki: 0,
+    weak: 0,
+    vulnerable: 0,
+    phantom: 0,
+    actionCount: 0,
+    discardDrawDelta: 0,
   };
 
   const enemyStates: EnemyBattleState[] = enemies.map((enemy) => ({
@@ -65,6 +174,8 @@ export function initBattle(player: Player, playerDeck: Card[], enemies: Enemy[])
     currentHp: enemy.maxHp,
     shield: 0,
     nextAction: enemy.enemyActions[0] ?? null,
+    weak: 0,
+    vulnerable: 0,
   }));
 
   return {
@@ -122,76 +233,21 @@ export function playCard(state: BattleState, handIndex: number, targetEnemyIndex
   }
 }
 
-// TODO(human): card の effects を全て適用する。
-// Attack属性でHPがマイナス → dealDamage() でターゲット敵へ
-// Defense属性でHPがプラス → addShield() でプレイヤーへ
-// DeckDraw → drawCards() でプレイヤーに追加ドロー
-// AttackPower/DefensePower → playerState.attackPower/defensePower を更新
-// hitCount がある場合は damage を hitCount 回適用する
 export function applyCardEffects(state: BattleState, card: Card, targetEnemyIndex?: number): BattleState {
-  switch (card.attribute) {
-    case 'Attack':
-      for (const [effect, value] of Object.entries(card.effects)) {
-        if (effect === "HP") {
-          if (targetEnemyIndex === undefined) {
-            let newEnemies: EnemyBattleState[] = [];
+  let newState = state;
 
-            switch (card.target) {
-              case "All":
-                newEnemies = state.enemies.map((enemy) => {
-                  return dealDamage(enemy, Math.abs(value));
-                }
-                return { ...state, enemies: newEnemies };
-
-              case "Random":
-                const randomIndex = Math.floor(Math.random() * state.enemies.length);
-                newEnemies = state.enemies.map((enemy, index) => {
-                  if (index === randomIndex) {
-                    return dealDamage(enemy, Math.abs(value));
-                  } else {
-                    return enemy;
-                  }
-                }
-                return { ...state, enemies: newEnemies };
-            }
-          } else {
-            const newEnemies = state.enemies.map((enemy, index) => {
-              if (index === targetEnemyIndex) {
-                return dealDamage(enemy, Math.abs(value));
-              } else {
-                return enemy;
-              }
-            });
-            return { ...state, enemies: newEnemies };
-          }
-          break;
-    case 'Defense':
-      let currentState = state;
-      for (const [effect, value] of Object.entries(card.effects)) {
-        if (effect === "HP") {
-          currentState = { ...currentState, playerState: addShield(currentState.playerState, value) as PlayerBattleState };
-        } else if (effect === "DeckDraw") {
-          currentState = { ...currentState, playerState: drawCards(currentState.playerState, value) };
-        } else if (effect === "AttackPower") {
-          const newPlayerState = {
-            ...currentState.playerState,
-            attackPower: currentState.playerState.attackPower + value,
-          };
-          currentState = { ...currentState, playerState: newPlayerState as PlayerBattleState };
-        } else if (effect === "DefensePower") {
-          const newPlayerState = {
-            ...currentState.playerState,
-            defensePower: currentState.playerState.defensePower + value,
-          }
-
-          currentState = { ...currentState, playerState: newPlayerState as PlayerBattleState };
-        }
-      }
-      return currentState;
-    case 'Skill':
-      break;
+  for (const [effect, value] of Object.entries(card.selfEffects)) {
+    newState = applyEffectToPlayer(newState, effect as StatusEffect, value);
   }
-  return state;
+
+  const hits = card.hitCount ?? 1;
+  for (let i = 0; i < hits; i++) {
+    for (const [effect, value] of Object.entries(card.targetEffects)) {
+      newState = applyEffectToTarget(newState, effect as StatusEffect, value, card.target, targetEnemyIndex);
+    }
+  }
+
+  return newState;
 }
 
 // --- Turn Processing ---

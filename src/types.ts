@@ -1,6 +1,6 @@
-export type Attribute = 'Attack' | 'Defense' | 'Skill';
-export type TargetType = 'Single' | 'All' | 'Random';
-export type StatusEffect = 'HP' | 'AttackPower' | 'DefensePower' | 'DeckDraw' | 'DiscardDraw' | 'ActionCount';
+export type Attribute = 'Attack' | 'Defense' | 'Skill' | 'Power';
+export type TargetType = 'Single' | 'All' | 'Random' | 'Player';
+export type StatusEffect = 'HP' | 'Shield' | 'AttackPower' | 'DefensePower' | 'DeckDraw' | 'DiscardDraw' | 'ActionCount' | 'Ki' | 'Weak' | 'Phantom' | 'Vulnerable';
 export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic';
 export type TurnPhase = 'PlayerTurn' | 'EnemyTurn' | 'Victory' | 'Defeat';
 export type EnemyStrength = 'Weak' | 'Strong' | 'Elite' | 'Boss' | 'FinalBoss';
@@ -8,10 +8,12 @@ export type EnemyActionType = 'Attack' | 'QuickAttack' | 'Buff' | 'Debuff' | 'He
 export type DropType = 'Card' | 'Item' | 'Gold';
 
 export interface Card {
+  id: string;
   cost: number;
   name: string;
   attribute: Attribute;
-  effects: Partial<Record<StatusEffect, number>>;
+  selfEffects: Partial<Record<StatusEffect, number>>;
+  targetEffects: Partial<Record<StatusEffect, number>>;
   illustrationUrl: string | null;
   rarity: Rarity;
   description: string;
@@ -61,11 +63,19 @@ export interface PlayerBattleState extends CombatantState {
   discardPile: Card[];
   attackPower: number;
   defensePower: number;
+  ki: number;
+  weak: number;
+  vulnerable: number;
+  phantom: number;
+  actionCount: number;
+  discardDrawDelta: number;
 }
 
 export interface EnemyBattleState extends CombatantState {
   enemy: Enemy;
   nextAction: EnemyAction | null;
+  weak: number;
+  vulnerable: number;
 }
 
 export interface BattleState {
