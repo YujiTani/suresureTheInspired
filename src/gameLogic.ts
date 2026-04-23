@@ -233,7 +233,27 @@ export function playCard(state: BattleState, handIndex: number, targetEnemyIndex
   }
 }
 
+// --- Special Card Handlers ---
+
+function applyYousenkaBeniIto(state: BattleState, targetEnemyIndex?: number): BattleState {
+  return applyEffectToTarget(state, "HP", -(10 + state.playerState.ki), "Single", targetEnemyIndex);
+}
+
+function applySpecialCardEffect(
+  state: BattleState,
+  card: Card,
+  targetEnemyIndex?: number,
+): BattleState | null {
+  switch (card.id) {
+    case 'K003': return applyYousenkaBeniIto(state, targetEnemyIndex);
+    default: return null;
+  }
+}
+
 export function applyCardEffects(state: BattleState, card: Card, targetEnemyIndex?: number): BattleState {
+  const special = applySpecialCardEffect(state, card, targetEnemyIndex);
+  if (special !== null) return special;
+
   let newState = state;
 
   for (const [effect, value] of Object.entries(card.selfEffects)) {
