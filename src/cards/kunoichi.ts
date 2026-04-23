@@ -181,7 +181,7 @@ const shienmNoHebiCard: Card = {
 const zanzoKenCard: Card = {
   id: 'K014',
   cost: 1,
-  name: '残像剣',
+  name: '残影剣',
   attribute: 'Attack',
   selfEffects: { Phantom: 1 },
   targetEffects: { HP: -6 },

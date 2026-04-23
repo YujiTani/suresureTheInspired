@@ -252,17 +252,17 @@ export function applyCardEffects(state: BattleState, card: Card, targetEnemyInde
 
 // --- Turn Processing ---
 
-// TODO(human): プレイヤーターン開始処理
-// ① playerState.shield を 0 にリセット
-// ② drawCards() で5枚引く
-// ③ currentEnergy を INITIAL_ENERGY にリセット
 export function startPlayerTurn(state: BattleState): BattleState {
+  const drawCardCount = Math.max(0, INITIAL_HAND_SIZE + state.playerState.actionCount + state.playerState.discardDrawDelta);
+
   return {
     ...state,
     playerState: {
-      ...drawCards(state.playerState, INITIAL_HAND_SIZE),
+      ...drawCards(state.playerState, drawCardCount),
       shield: 0,
       currentEnergy: INITIAL_ENERGY,
+      actionCount: 0,
+      discardDrawDelta: 0,
     },
   }
 }
