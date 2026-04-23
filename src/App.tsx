@@ -3,7 +3,7 @@ import type { Card, Player } from './types';
 import { BattleScreen } from './components/BattleScreen';
 import { princessCards, princessStarterDeck } from './cards/princess';
 import { kunoichiCards, kunoichiStarterDeck } from './cards/kunoichi';
-import { enemies } from './data/sampleEnemies';
+import * as enemies from './data/enemies';
 import './styles/battle.css';
 
 type CharaKey = 'princess' | 'kunoichi';
