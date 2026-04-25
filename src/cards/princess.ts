@@ -5,7 +5,7 @@ import type { Card } from '../types';
 const strikeCard: Card = {
   id: 'P001',
   cost: 1,
-  name: 'ストライク',
+  name: '飛び蹴り',
   attribute: 'Attack',
   selfEffects: {},
   targetEffects: { HP: -6 },
@@ -18,7 +18,7 @@ const strikeCard: Card = {
 const heavyStrikeCard: Card = {
   id: 'P002',
   cost: 2,
-  name: 'ヘビーストライク',
+  name: 'ヘビースラッシュ',
   attribute: 'Attack',
   selfEffects: {},
   targetEffects: { HP: -14 },
@@ -31,7 +31,7 @@ const heavyStrikeCard: Card = {
 const quickStrikeCard: Card = {
   id: 'P003',
   cost: 0,
-  name: 'クイックストライク',
+  name: 'キック',
   attribute: 'Attack',
   selfEffects: {},
   targetEffects: { HP: -3 },
@@ -44,7 +44,7 @@ const quickStrikeCard: Card = {
 const slashCard: Card = {
   id: 'P004',
   cost: 1,
-  name: 'スラッシュ',
+  name: '突き',
   attribute: 'Attack',
   selfEffects: {},
   targetEffects: { HP: -8 },
@@ -57,7 +57,7 @@ const slashCard: Card = {
 const doubleStrikeCard: Card = {
   id: 'P005',
   cost: 2,
-  name: 'ダブルストライク',
+  name: 'ダブルスラッシュ',
   attribute: 'Attack',
   selfEffects: {},
   targetEffects: { HP: -10 },

@@ -22,7 +22,7 @@ export function PlayerBar({ player, playerState }: Props) {
     phantom > 0          && { label: `分身 ${phantom}`,        value: phantom },
     actionCount > 0      && { label: `行動+${actionCount}`,    value: actionCount },
     discardDrawDelta !== 0 && { label: `捨ドロー${discardDrawDelta > 0 ? '+' : ''}${discardDrawDelta}`, value: discardDrawDelta },
-  ].filter((b): b is BuffEntry => Boolean(b));
+  ].filter((buff): buff is BuffEntry => Boolean(buff));
 
   return (
     <div className="player-bar">
@@ -60,8 +60,8 @@ export function PlayerBar({ player, playerState }: Props) {
         <div className="stats-right">
           <div className="buff-cap">Blessings &amp; Hexes</div>
           <div className="buff-grid">
-            {buffs.map((b, i) => (
-              <div key={i} className="buff-badge">{b.label}</div>
+            {buffs.map((buff, index) => (
+              <div key={index} className="buff-badge">{buff.label}</div>
             ))}
           </div>
         </div>

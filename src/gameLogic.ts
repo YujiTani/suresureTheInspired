@@ -9,10 +9,50 @@ import type {
   BattleState,
   TurnPhase,
   StatusEffect,
+  LogEntry,
 } from './types';
+
+// =============================================================
+// gameLogic.ts — 関数一覧
+// -------------------------------------------------------------
+// [Log]           addLog
+// [Utilities]     shuffle / dealDamage / addShield / healHp / calculateDamage
+// [Effect Apply]  applyEffectToPlayer / applyEffectToEnemy / applyEffectToTarget
+// [Battle Init]   initBattle
+// [Card Ops]      drawCards / playCard / applyCardEffects
+// [Special Cards] applyYousenkaBeniIto / applySpecialCardEffect
+// [Turn]          startPlayerTurn / endPlayerTurn / executeEnemyTurn / selectNextEnemyAction
+// [State Check]   checkBattleResult
+// =============================================================
+
+// --- Log ---
+
+function addLog(state: BattleState, entry: Omit<LogEntry, 'turn'>): BattleState {
+  return { ...state, log: [...state.log, { ...entry, turn: state.turn }] };
+}
 
 const INITIAL_ENERGY = 3;
 const INITIAL_HAND_SIZE = 5;
+
+const PLAYER_DIFF_LABELS: Partial<Record<keyof PlayerBattleState, string>> = {
+  shield: 'Shield', ki: 'Ki', attackPower: 'ATK',
+  defensePower: 'DEF', weak: 'Weak', vulnerable: 'Vuln', phantom: 'Phantom',
+};
+
+const ENEMY_DIFF_LABELS: Partial<Record<keyof EnemyBattleState, string>> = {
+  weak: 'Weak', vulnerable: 'Vuln',
+};
+
+function buildDiffParts<T extends object>(
+  before: T, after: T, labels: Partial<Record<keyof T, string>>
+): string[] {
+  const sign = (num: number) => num > 0 ? `+${num}` : `${num}`;
+  return Object.entries(labels).flatMap(([key, label]) => {
+    const beforeVal = (before as Record<string, unknown>)[key] as number;
+    const afterVal = (after as Record<string, unknown>)[key] as number;
+    return afterVal !== beforeVal ? [`${label} ${sign(afterVal - beforeVal)}`] : [];
+  });
+}
 
 // --- Utilities (Claude) ---
 
@@ -56,33 +96,35 @@ export function calculateDamage(baseDamage: number, attackerWeak: number, target
   return currentDamage;
 }
 
+// --- Effect Apply ---
+
 function applyEffectToPlayer(state: BattleState, effect: StatusEffect, value: number): BattleState {
-  const p = state.playerState;
+  const playerState = state.playerState;
   switch (effect) {
     case 'HP':
       return value < 0
-        ? { ...state, playerState: dealDamage(p, Math.abs(value)) as PlayerBattleState }
-        : { ...state, playerState: healHp(p, value, state.player.maxHp) as PlayerBattleState };
+        ? { ...state, playerState: dealDamage(playerState, Math.abs(value)) as PlayerBattleState }
+        : { ...state, playerState: healHp(playerState, value, state.player.maxHp) as PlayerBattleState };
     case 'Shield':
-      return { ...state, playerState: addShield(p, value) as PlayerBattleState };
+      return { ...state, playerState: addShield(playerState, value) as PlayerBattleState };
     case 'DeckDraw':
-      return { ...state, playerState: drawCards(p, value) };
+      return { ...state, playerState: drawCards(playerState, value) };
     case 'AttackPower':
-      return { ...state, playerState: { ...p, attackPower: p.attackPower + value } };
+      return { ...state, playerState: { ...playerState, attackPower: playerState.attackPower + value } };
     case 'DefensePower':
-      return { ...state, playerState: { ...p, defensePower: p.defensePower + value } };
+      return { ...state, playerState: { ...playerState, defensePower: playerState.defensePower + value } };
     case 'Ki':
-      return { ...state, playerState: { ...p, ki: Math.max(0, p.ki + value) } };
+      return { ...state, playerState: { ...playerState, ki: Math.max(0, playerState.ki + value) } };
     case 'Weak':
-      return { ...state, playerState: { ...p, weak: Math.max(0, p.weak + value) } };
+      return { ...state, playerState: { ...playerState, weak: Math.max(0, playerState.weak + value) } };
     case 'Vulnerable':
-      return { ...state, playerState: { ...p, vulnerable: Math.max(0, p.vulnerable + value) } };
+      return { ...state, playerState: { ...playerState, vulnerable: Math.max(0, playerState.vulnerable + value) } };
     case 'Phantom':
-      return { ...state, playerState: { ...p, phantom: Math.max(0, p.phantom + value) } };
+      return { ...state, playerState: { ...playerState, phantom: Math.max(0, playerState.phantom + value) } };
     case 'ActionCount':
-      return { ...state, playerState: { ...p, actionCount: p.actionCount + value } };
+      return { ...state, playerState: { ...playerState, actionCount: playerState.actionCount + value } };
     case 'DiscardDraw':
-      return { ...state, playerState: { ...p, discardDrawDelta: p.discardDrawDelta + value } };
+      return { ...state, playerState: { ...playerState, discardDrawDelta: playerState.discardDrawDelta + value } };
     default:
       return state;
   }
@@ -116,20 +158,22 @@ function applyEffectToTarget(
   targetEnemyIndex?: number
 ): BattleState {
   const attackerWeak = state.playerState.weak;
+
   switch (target) {
     case 'Player':
       return applyEffectToPlayer(state, effect, value);
     case 'All':
+      const newState = addLog(state, { event: "DamageDealt", message: `全ての敵に ${effect} ${value} を適用`, debug: true })
       return {
-        ...state,
-        enemies: state.enemies.map((e) => applyEffectToEnemy(e, effect, value, attackerWeak)),
+        ...newState,
+        enemies: state.enemies.map((enemy) => applyEffectToEnemy(enemy, effect, value, attackerWeak)),
       };
     case 'Random': {
       const idx = Math.floor(Math.random() * state.enemies.length);
       return {
         ...state,
-        enemies: state.enemies.map((e, i) =>
-          i === idx ? applyEffectToEnemy(e, effect, value, attackerWeak) : e
+        enemies: state.enemies.map((enemy, index) =>
+          index === idx ? applyEffectToEnemy(enemy, effect, value, attackerWeak) : enemy
         ),
       };
     }
@@ -138,15 +182,14 @@ function applyEffectToTarget(
       if (targetEnemyIndex === undefined) return state;
       return {
         ...state,
-        enemies: state.enemies.map((e, i) =>
-          i === targetEnemyIndex ? applyEffectToEnemy(e, effect, value, attackerWeak) : e
+        enemies: state.enemies.map((enemy, index) =>
+          index === targetEnemyIndex ? applyEffectToEnemy(enemy, effect, value, attackerWeak) : enemy
         ),
       };
   }
 }
 
 // --- Battle Init (Claude) ---
-
 export function initBattle(player: Player, playerDeck: Card[], enemies: Enemy[]): BattleState {
   const shuffledDeck = shuffle(playerDeck);
   const hand = shuffledDeck.slice(0, INITIAL_HAND_SIZE);
@@ -184,12 +227,11 @@ export function initBattle(player: Player, playerDeck: Card[], enemies: Enemy[])
     enemies: enemyStates,
     turn: 1,
     phase: 'PlayerTurn',
+    log: [],
   };
 }
 
 // --- Card Operations ---
-
-// TODO(human): デッキからcount枚引く。デッキが空なら捨て札をシャッフルしてデッキに戻す。
 export function drawCards(playerState: PlayerBattleState, count: number): PlayerBattleState {
   let { hand, deck, discardPile } = playerState;
   const drawCount = Math.min(count, playerState.deck.length)
@@ -215,7 +257,35 @@ export function playCard(state: BattleState, handIndex: number, targetEnemyIndex
     return state;
   }
 
-  const newState = applyCardEffects(state, card, targetEnemyIndex);
+  let newState = applyCardEffects(state, card, targetEnemyIndex);
+
+  const dmgDealt = state.enemies.map((enemy, index) => enemy.currentHp - newState.enemies[index].currentHp);
+  const totalDmg = dmgDealt.reduce((sum, damage) => sum + damage, 0);
+
+  const effectParts: string[] = [];
+  if (totalDmg > 0) effectParts.push(`Attack ${totalDmg}`);
+  effectParts.push(...buildDiffParts(state.playerState, newState.playerState, PLAYER_DIFF_LABELS));
+  state.enemies.forEach((before, i) => {
+    buildDiffParts(before, newState.enemies[i], ENEMY_DIFF_LABELS)
+      .forEach(part => effectParts.push(`${before.enemy.name} ${part}`));
+  });
+
+  const effectSummary = effectParts.length > 0 ? ` → ${effectParts.join(', ')}` : '';
+  newState = addLog(newState, {
+    event: 'CardPlay',
+    message: `「${card.name}」をプレイ (コスト:${card.cost})${effectSummary}`,
+  });
+
+  dmgDealt.forEach((dmg, i) => {
+    if (dmg > 0) {
+      const shieldAbsorbed = state.enemies[i].shield - newState.enemies[i].shield;
+      const incoming = dmg + shieldAbsorbed;
+      newState = addLog(newState, {
+        event: 'DamageDealt',
+        message: `${state.enemies[i].enemy.name} に 攻撃 ${incoming} → シールド ${shieldAbsorbed} 軽減 / HP -${dmg} (残HP: ${newState.enemies[i].currentHp})`,
+      });
+    }
+  });
 
   const result = checkBattleResult(newState);
   if (result === "Victory" || result === "Defeat") {
@@ -234,9 +304,8 @@ export function playCard(state: BattleState, handIndex: number, targetEnemyIndex
 }
 
 // --- Special Card Handlers ---
-
 function applyYousenkaBeniIto(state: BattleState, targetEnemyIndex?: number): BattleState {
-  return applyEffectToTarget(state, "HP", -(10 + state.playerState.ki), "Single", targetEnemyIndex);
+  return applyEffectToTarget(state, "HP", -(10 + state.playerState.ki * 1), "Single", targetEnemyIndex);
 }
 
 function applySpecialCardEffect(
@@ -244,8 +313,9 @@ function applySpecialCardEffect(
   card: Card,
   targetEnemyIndex?: number,
 ): BattleState | null {
+  const loggedState = addLog(state, { event: 'CardPlay', message: `[特殊ハンドラー] ${card.id} ${card.name}`, debug: true });
   switch (card.id) {
-    case 'K003': return applyYousenkaBeniIto(state, targetEnemyIndex);
+    case 'K004': return applyYousenkaBeniIto(loggedState, targetEnemyIndex);
     default: return null;
   }
 }
@@ -271,14 +341,19 @@ export function applyCardEffects(state: BattleState, card: Card, targetEnemyInde
 }
 
 // --- Turn Processing ---
-
 export function startPlayerTurn(state: BattleState): BattleState {
   const drawCardCount = Math.max(0, INITIAL_HAND_SIZE + state.playerState.actionCount + state.playerState.discardDrawDelta);
+  const playerState = state.playerState;
+
+  let newState = addLog(state, {
+    event: 'TurnStart',
+    message: `ターン ${state.turn} 開始 (ki:${playerState.ki} attackPower:${playerState.attackPower} shield:${playerState.shield})`,
+  });
 
   return {
-    ...state,
+    ...newState,
     playerState: {
-      ...drawCards(state.playerState, drawCardCount),
+      ...drawCards(newState.playerState, drawCardCount),
       shield: 0,
       currentEnergy: INITIAL_ENERGY,
       actionCount: 0,
@@ -287,9 +362,6 @@ export function startPlayerTurn(state: BattleState): BattleState {
   }
 }
 
-// TODO(human): プレイヤーターン終了処理
-// ① 手札を全て捨て札へ移す
-// ② phase を 'EnemyTurn' に変更
 export function endPlayerTurn(state: BattleState): BattleState {
   return {
     ...state,
@@ -310,12 +382,25 @@ export function executeEnemyTurn(state: BattleState): BattleState {
 
     const action = enemyState.nextAction;
 
+    currentState = addLog(currentState, {
+      event: 'EnemyAction',
+      message: `${enemyState.enemy.name} が ${action.type}(${action.value}) を選択`,
+    });
+
     switch (action.type) {
       case "Attack":
-      case "QuickAttack":
+      case "QuickAttack": {
+        const prevHp = currentState.playerState.currentHp;
+        const prevShield = currentState.playerState.shield;
         currentState = { ...currentState, playerState: dealDamage(currentState.playerState, action.value) as PlayerBattleState };
+        const shieldAbsorbed = prevShield - currentState.playerState.shield;
+        const hpDmg = prevHp - currentState.playerState.currentHp;
+        currentState = addLog(currentState, {
+          event: 'DamageDealt',
+          message: `攻撃 ${action.value} → シールド ${shieldAbsorbed} 軽減 / HP -${hpDmg} (残HP: ${currentState.playerState.currentHp})`,
+        });
         break;
-
+      }
       case "Buff":
         currentState = {
           ...currentState,
@@ -326,6 +411,10 @@ export function executeEnemyTurn(state: BattleState): BattleState {
             return enemy;
           }),
         };
+        currentState = addLog(currentState, {
+          event: 'ShieldGained',
+          message: `${enemyState.enemy.name} がシールド +${action.value} 獲得`,
+        });
         break;
     }
 
@@ -337,10 +426,10 @@ export function executeEnemyTurn(state: BattleState): BattleState {
     // 次の行動を決定する（selectNextEnemyAction を使う）
     currentState = {
       ...currentState,
-      enemies: currentState.enemies.map((e) =>
-        e === enemyState
-          ? { ...e, nextAction: selectNextEnemyAction(e.enemy) }
-          : e
+      enemies: currentState.enemies.map((currentEnemy) =>
+        currentEnemy === enemyState
+          ? { ...currentEnemy, nextAction: selectNextEnemyAction(currentEnemy.enemy) }
+          : currentEnemy
       ),
     };
   }
@@ -363,11 +452,6 @@ export function selectNextEnemyAction(enemy: Enemy): EnemyAction {
 }
 
 // --- Game State Check ---
-
-// TODO(human): バトル結果を判定する
-// 全ての敵の currentHp が 0 → 'Victory'
-// プレイヤーの currentHp が 0 → 'Defeat'
-// それ以外 → 現在の phase をそのまま返す
 export function checkBattleResult(state: BattleState): TurnPhase {
   if (state.enemies.every(enemy => enemy.currentHp <= 0)) {
     return 'Victory';
@@ -379,3 +463,4 @@ export function checkBattleResult(state: BattleState): TurnPhase {
 
   return state.phase;
 }
+

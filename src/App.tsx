@@ -23,7 +23,7 @@ const CHARACTERS: Record<CharaKey, { player: Player; cards: Card[]; deck: string
 };
 
 function resolveDeck(deckIds: string[], cards: Card[]): Card[] {
-  return deckIds.map(id => cards.find(c => c.id === id)!).filter(Boolean);
+  return deckIds.map(id => cards.find(card => card.id === id)!).filter(Boolean);
 }
 
 const ENEMY_LABELS: Record<EnemyKey, string> = {

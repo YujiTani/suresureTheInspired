@@ -5,6 +5,7 @@ import { EnemyArea } from './EnemyArea';
 import { PlayerBar } from './PlayerBar';
 import { CardArea } from './CardArea';
 import { TurnBanner } from './TurnBanner';
+import { LogPanel } from './LogPanel';
 import type { FloatItem } from './DamageNumber';
 
 interface Props {
@@ -18,6 +19,7 @@ export function BattleScreen({ player, deck, enemies }: Props) {
   const [floats, setFloats]           = useState<FloatItem[]>([]);
   const [bannerVisible, setBannerVisible] = useState(false);
   const [bannerTurn, setBannerTurn]   = useState(1);
+  const [logVisible, setLogVisible]   = useState(false);
   const floatCounter = useRef(0);
 
   function addDamageFloats(nextState: BattleState, prevHp: number[]) {
@@ -79,13 +81,18 @@ export function BattleScreen({ player, deck, enemies }: Props) {
       />
 
       <TurnBanner turn={bannerTurn} visible={bannerVisible} />
+      {logVisible && <LogPanel log={state.log} />}
 
       <div style={{
-        position: 'absolute', top: 8, right: 12, zIndex: 50,
-        fontFamily: 'Cinzel, serif', fontSize: 10,
-        color: '#6e6880', letterSpacing: '.3em',
+        position: 'absolute', top: 48, right: 12, zIndex: 110,
+        display: 'flex', alignItems: 'center', gap: 10,
       }}>
-        TURN {turn}
+        <button className="log-toggle-btn" onClick={() => setLogVisible(v => !v)}>
+          {logVisible ? 'LOG ▲' : 'LOG ▼'}
+        </button>
+        <span style={{ fontFamily: 'Cinzel, serif', fontSize: 10, color: '#6e6880', letterSpacing: '.3em' }}>
+          TURN {turn}
+        </span>
       </div>
 
       {(phase === 'Victory' || phase === 'Defeat') && (

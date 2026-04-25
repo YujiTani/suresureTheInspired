@@ -1,3 +1,18 @@
+export type LogEventType =
+  | 'CardPlay'
+  | 'DamageDealt'
+  | 'ShieldGained'
+  | 'EnemyAction'
+  | 'TurnStart'
+  | 'TurnEnd';
+
+export interface LogEntry {
+  turn: number;
+  event: LogEventType;
+  message: string;
+  debug?: boolean;
+}
+
 export type Attribute = 'Attack' | 'Defense' | 'Skill' | 'Power';
 export type TargetType = 'Single' | 'All' | 'Random' | 'Player';
 export type StatusEffect = 'HP' | 'Shield' | 'AttackPower' | 'DefensePower' | 'DeckDraw' | 'DiscardDraw' | 'ActionCount' | 'Ki' | 'Weak' | 'Phantom' | 'Vulnerable';
@@ -84,6 +99,7 @@ export interface BattleState {
   enemies: EnemyBattleState[];
   turn: number;
   phase: TurnPhase;
+  log: LogEntry[];
 }
 
 export interface RunState {

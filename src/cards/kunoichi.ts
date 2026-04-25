@@ -73,7 +73,7 @@ const renkiCard: Card = {
 const kawariminoCard: Card = {
   id: 'K006',
   cost: 1,
-  name: '変わり身',
+  name: '変わり身の術',
   attribute: 'Skill',
   selfEffects: { Shield: 5, Phantom: 1 },
   targetEffects: {},

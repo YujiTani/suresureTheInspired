@@ -58,8 +58,8 @@ function CardFrame({ rarity }: FrameProps) {
       </g>
 
       {/* Four corner flourishes */}
-      {corners.map((c, i) => (
-        <g key={i} transform={`translate(${c.x} ${c.y}) rotate(${c.rot})`}>
+      {corners.map((corner, index) => (
+        <g key={index} transform={`translate(${corner.x} ${corner.y}) rotate(${corner.rot})`}>
           <g className="stroke" fill="none" strokeWidth="1" strokeLinecap="round">
             <path d="M0 30 C 3 15, 15 3, 30 0"/>
             <path d="M6 36 C 9 21, 21 9, 36 6" opacity=".6" strokeWidth=".7"/>

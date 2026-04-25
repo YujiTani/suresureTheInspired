@@ -437,3 +437,37 @@ body {
 }
 .phase-text.victory { color: #4f4; text-shadow: 0 0 30px rgba(80,255,80,.5); }
 .phase-text.defeat  { color: #f44; text-shadow: 0 0 30px rgba(255,80,80,.5); }
+
+/* ─── Log Toggle Button ─── */
+.log-toggle-btn {
+  font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: .2em;
+  background: transparent; border: 1px solid #3a3250;
+  color: var(--ink-mute); padding: 2px 8px; border-radius: 3px;
+  cursor: pointer; transition: color .2s, border-color .2s;
+}
+.log-toggle-btn:hover { color: var(--gold-soft); border-color: var(--gold-deep); }
+
+/* ─── Log Panel ─── */
+.log-panel {
+  position: absolute; right: 12px; top: 48px; bottom: 160px;
+  width: 220px; z-index: 10;
+  background: rgba(13,13,26,.8); border: 1px solid #2a2340;
+  border-radius: 4px; display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.log-panel-title {
+  font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: .3em;
+  color: var(--ink-mute); padding: 6px 10px 4px; border-bottom: 1px solid #2a2340;
+  flex-shrink: 0;
+}
+.log-panel-entries {
+  flex: 1; overflow-y: auto; padding: 4px 8px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.log-panel-entries::-webkit-scrollbar { width: 3px; }
+.log-panel-entries::-webkit-scrollbar-thumb { background: #3a3250; }
+.log-entry {
+  font-size: 11px; line-height: 1.5;
+  font-family: 'Cormorant Garamond', serif;
+  word-break: break-all;
+}
