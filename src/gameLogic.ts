@@ -43,6 +43,9 @@ const ENEMY_DIFF_LABELS: Partial<Record<keyof EnemyBattleState, string>> = {
   weak: 'Weak', vulnerable: 'Vuln',
 };
 
+const PLAYER_DECAY_FIELDS: Array<keyof PlayerBattleState> = ['weak', 'vulnerable', 'phantom'];
+const ENEMY_DECAY_FIELDS: Array<keyof EnemyBattleState> = ['weak', 'vulnerable'];
+
 function buildDiffParts<T extends object>(
   before: T, after: T, labels: Partial<Record<keyof T, string>>
 ): string[] {
@@ -52,6 +55,15 @@ function buildDiffParts<T extends object>(
     const afterVal = (after as Record<string, unknown>)[key] as number;
     return afterVal !== beforeVal ? [`${label} ${sign(afterVal - beforeVal)}`] : [];
   });
+}
+
+function decayStacks<T extends object>(state: T, fields: Array<keyof T>): T {
+  return fields.reduce((updateState, currentField) => {
+    return {
+      ...updateState,
+      [currentField]: Math.max(0, (updateState[currentField] as number) - 1)
+    };
+  }, state)
 }
 
 // --- Utilities (Claude) ---
@@ -97,6 +109,24 @@ export function calculateDamage(baseDamage: number, attackerWeak: number, target
 }
 
 // --- Effect Apply ---
+
+function tryDealDamageToPlayer(state: BattleState, damage: number): BattleState {
+  if (state.playerState.phantom >= 1) {
+    const phantomConsumedState = {
+      ...state,
+      playerState: { ...state.playerState, phantom: state.playerState.phantom - 1 },
+    };
+    const evaded = Math.random() < 0.5;
+    if (evaded) {
+      return addLog(phantomConsumedState, {
+        event: 'DamageEvaded',
+        message: `幻影で攻撃を回避した！ (ダメージ ${damage} 無効化)`,
+      });
+    }
+    return { ...phantomConsumedState, playerState: dealDamage(phantomConsumedState.playerState, damage) as PlayerBattleState };
+  }
+  return { ...state, playerState: dealDamage(state.playerState, damage) as PlayerBattleState };
+}
 
 function applyEffectToPlayer(state: BattleState, effect: StatusEffect, value: number): BattleState {
   const playerState = state.playerState;
@@ -342,24 +372,29 @@ export function applyCardEffects(state: BattleState, card: Card, targetEnemyInde
 
 // --- Turn Processing ---
 export function startPlayerTurn(state: BattleState): BattleState {
-  const drawCardCount = Math.max(0, INITIAL_HAND_SIZE + state.playerState.actionCount + state.playerState.discardDrawDelta);
-  const playerState = state.playerState;
+  const decayed = decayStacks(state.playerState, PLAYER_DECAY_FIELDS);
+  const diffParts = buildDiffParts(state.playerState, decayed, PLAYER_DIFF_LABELS);
+  const drawCardCount = Math.max(0, INITIAL_HAND_SIZE + decayed.actionCount + decayed.discardDrawDelta);
 
-  let newState = addLog(state, {
+  let newState = diffParts.length > 0
+    ? addLog(state, { event: 'TurnStart', message: `デバフ減衰: ${diffParts.join(', ')}`, debug: true })
+    : state;
+
+  newState = addLog(newState, {
     event: 'TurnStart',
-    message: `ターン ${state.turn} 開始 (ki:${playerState.ki} attackPower:${playerState.attackPower} shield:${playerState.shield})`,
+    message: `ターン ${state.turn} 開始 (ki:${decayed.ki} attackPower:${decayed.attackPower} shield:${decayed.shield})`,
   });
 
   return {
     ...newState,
     playerState: {
-      ...drawCards(newState.playerState, drawCardCount),
+      ...drawCards(decayed, drawCardCount),
       shield: 0,
       currentEnergy: INITIAL_ENERGY,
       actionCount: 0,
       discardDrawDelta: 0,
     },
-  }
+  };
 }
 
 export function endPlayerTurn(state: BattleState): BattleState {
@@ -371,11 +406,14 @@ export function endPlayerTurn(state: BattleState): BattleState {
       discardPile: [...state.playerState.discardPile, ...state.playerState.hand],
     },
     phase: 'EnemyTurn',
-  }
+  };
 }
 
 export function executeEnemyTurn(state: BattleState): BattleState {
-  let currentState = state;
+  let currentState = {
+    ...state,
+    enemies: state.enemies.map(enemyState => ({ ...enemyState, shield: 0 })),
+  };
 
   for (const enemyState of currentState.enemies) {
     if (enemyState.nextAction === null) continue;
@@ -392,7 +430,7 @@ export function executeEnemyTurn(state: BattleState): BattleState {
       case "QuickAttack": {
         const prevHp = currentState.playerState.currentHp;
         const prevShield = currentState.playerState.shield;
-        currentState = { ...currentState, playerState: dealDamage(currentState.playerState, action.value) as PlayerBattleState };
+        currentState = tryDealDamageToPlayer(currentState, action.value);
         const shieldAbsorbed = prevShield - currentState.playerState.shield;
         const hpDmg = prevHp - currentState.playerState.currentHp;
         currentState = addLog(currentState, {
@@ -433,6 +471,23 @@ export function executeEnemyTurn(state: BattleState): BattleState {
       ),
     };
   }
+
+  const beforeEnemies = currentState.enemies;
+  currentState = {
+    ...currentState,
+    enemies: currentState.enemies.map(enemyState => decayStacks(enemyState, ENEMY_DECAY_FIELDS)),
+  };
+  beforeEnemies.forEach((before, index) => {
+    const after = currentState.enemies[index];
+    const diffParts = buildDiffParts(before, after, ENEMY_DIFF_LABELS);
+    if (diffParts.length > 0) {
+      currentState = addLog(currentState, {
+        event: 'TurnEnd',
+        message: `${before.enemy.name} デバフ減衰: ${diffParts.join(', ')}`,
+        debug: true,
+      });
+    }
+  });
 
   return { ...currentState, phase: 'PlayerTurn', turn: currentState.turn + 1 };
 }

@@ -9,6 +9,7 @@ interface Props {
 const EVENT_COLOR: Record<LogEventType, string> = {
   CardPlay: 'var(--gold-soft)',
   DamageDealt: 'var(--red-glow)',
+  DamageEvaded: 'var(--purple)',
   ShieldGained: 'var(--blue)',
   EnemyAction: 'var(--amber)',
   TurnStart: 'var(--green)',

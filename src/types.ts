@@ -1,6 +1,7 @@
 export type LogEventType =
   | 'CardPlay'
   | 'DamageDealt'
+  | 'DamageEvaded'
   | 'ShieldGained'
   | 'EnemyAction'
   | 'TurnStart'
