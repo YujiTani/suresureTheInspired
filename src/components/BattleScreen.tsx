@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import type { BattleState, Card, Enemy, Player } from '../types';
+import { useDebugApi } from '../hooks/useDebugApi';
 import { initBattle, playCard, endPlayerTurn, executeEnemyTurn, startPlayerTurn } from '../gameLogic';
 import { EnemyArea } from './EnemyArea';
 import { PlayerBar } from './PlayerBar';
@@ -21,6 +22,7 @@ export function BattleScreen({ player, deck, enemies }: Props) {
   const [bannerTurn, setBannerTurn]   = useState(1);
   const [logVisible, setLogVisible]   = useState(false);
   const floatCounter = useRef(0);
+  useDebugApi(setState);
 
   function addDamageFloats(nextState: BattleState, prevHp: number[]) {
     const damages = nextState.enemies.map((e, i) => prevHp[i] - e.currentHp);
