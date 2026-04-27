@@ -394,6 +394,7 @@ export function startPlayerTurn(state: BattleState): BattleState {
   const decayed = decayStacks(state.playerState, PLAYER_DECAY_FIELDS);
   const diffParts = buildDiffParts(state.playerState, decayed, PLAYER_DIFF_LABELS);
   const drawCardCount = Math.max(0, INITIAL_HAND_SIZE + decayed.actionCount + decayed.discardDrawDelta);
+  const activePowers = decayed.activePowers;
 
   let newState = diffParts.length > 0
     ? addLog(state, { event: 'TurnStart', message: `デバフ減衰: ${diffParts.join(', ')}`, debug: true })
@@ -415,11 +416,11 @@ export function startPlayerTurn(state: BattleState): BattleState {
     },
   };
 
-  // TODO(human): K011「狩の夜」トリガー判定を実装する
-  // 条件: decayed.ki >= 30 かつ turnStartState.playerState.activePowers.includes('K011')
-  // 効果: Shield+5 / AttackPower+5 / currentEnergy+2（シールド・エネルギーはリセット後なので加算でOK）
-  // ヒント: applyEffectToPlayer(turnStartState, 'Shield', 5) のように連続適用できる
-  //        Energy は StatusEffect に含まれないので playerState を直接スプレッドして currentEnergy を書き換える
+  if (decayed.ki >= 30 && activePowers.includes("K011")) {
+    turnStartState = applyEffectToPlayer(turnStartState, "Shield", 5);
+    turnStartState = applyEffectToPlayer(turnStartState, "AttackPower", 5);
+    turnStartState = { ...turnStartState, playerState: { ...turnStartState.playerState, currentEnergy: turnStartState.playerState.currentEnergy + 2 } }
+  }
 
   return turnStartState;
 }
