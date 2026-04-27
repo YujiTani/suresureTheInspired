@@ -85,6 +85,7 @@ export interface PlayerBattleState extends CombatantState {
   phantom: number;
   actionCount: number;
   discardDrawDelta: number;
+  activePowers: string[];
 }
 
 export interface EnemyBattleState extends CombatantState {

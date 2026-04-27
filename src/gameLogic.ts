@@ -20,7 +20,7 @@ import type {
 // [Effect Apply]  applyEffectToPlayer / applyEffectToEnemy / applyEffectToTarget
 // [Battle Init]   initBattle
 // [Card Ops]      drawCards / playCard / applyCardEffects
-// [Special Cards] applyYousenkaBeniIto / applySpecialCardEffect
+// [Special Cards] applyYousenkaBeniIto / applyOboromiNoJutsu / applyKariNoYoru / applySpecialCardEffect
 // [Turn]          startPlayerTurn / endPlayerTurn / executeEnemyTurn / selectNextEnemyAction
 // [State Check]   checkBattleResult
 // =============================================================
@@ -240,6 +240,7 @@ export function initBattle(player: Player, playerDeck: Card[], enemies: Enemy[])
     phantom: 0,
     actionCount: 0,
     discardDrawDelta: 0,
+    activePowers: [],
   };
 
   const enemyStates: EnemyBattleState[] = enemies.map((enemy) => ({
@@ -338,6 +339,22 @@ function applyYousenkaBeniIto(state: BattleState, targetEnemyIndex?: number): Ba
   return applyEffectToTarget(state, "HP", -(10 + state.playerState.ki * 1), "Single", targetEnemyIndex);
 }
 
+function applyOboromiNoJutsu(state: BattleState): BattleState {
+  // 気の蓄積がない場合は何もしない
+  if (state.playerState.ki <= 0) return state;
+
+  const phantomStack = state.playerState.ki;
+  return { ...state, playerState: { ...state.playerState, ki: 0, phantom: state.playerState.phantom + phantomStack, attackPower: state.playerState.attackPower + 1 } }
+}
+
+function applyKariNoYoru(state: BattleState): BattleState {
+  if (state.playerState.activePowers.includes('K011')) return state;
+  return {
+    ...state,
+    playerState: { ...state.playerState, activePowers: [...state.playerState.activePowers, 'K011'] },
+  };
+}
+
 function applySpecialCardEffect(
   state: BattleState,
   card: Card,
@@ -346,6 +363,8 @@ function applySpecialCardEffect(
   const loggedState = addLog(state, { event: 'CardPlay', message: `[特殊ハンドラー] ${card.id} ${card.name}`, debug: true });
   switch (card.id) {
     case 'K004': return applyYousenkaBeniIto(loggedState, targetEnemyIndex);
+    case 'K010': return applyOboromiNoJutsu(loggedState);
+    case 'K011': return applyKariNoYoru(loggedState);
     default: return null;
   }
 }
@@ -385,7 +404,7 @@ export function startPlayerTurn(state: BattleState): BattleState {
     message: `ターン ${state.turn} 開始 (ki:${decayed.ki} attackPower:${decayed.attackPower} shield:${decayed.shield})`,
   });
 
-  return {
+  let turnStartState: BattleState = {
     ...newState,
     playerState: {
       ...drawCards(decayed, drawCardCount),
@@ -395,6 +414,14 @@ export function startPlayerTurn(state: BattleState): BattleState {
       discardDrawDelta: 0,
     },
   };
+
+  // TODO(human): K011「狩の夜」トリガー判定を実装する
+  // 条件: decayed.ki >= 30 かつ turnStartState.playerState.activePowers.includes('K011')
+  // 効果: Shield+5 / AttackPower+5 / currentEnergy+2（シールド・エネルギーはリセット後なので加算でOK）
+  // ヒント: applyEffectToPlayer(turnStartState, 'Shield', 5) のように連続適用できる
+  //        Energy は StatusEffect に含まれないので playerState を直接スプレッドして currentEnergy を書き換える
+
+  return turnStartState;
 }
 
 export function endPlayerTurn(state: BattleState): BattleState {
