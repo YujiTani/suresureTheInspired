@@ -7,6 +7,8 @@ import { PlayerBar } from './PlayerBar';
 import { CardArea } from './CardArea';
 import { TurnBanner } from './TurnBanner';
 import { LogPanel } from './LogPanel';
+import { CardChoiceModal } from './CardChoiceModal';
+import { ukenagareshiVariants } from '../cards/normal';
 import type { FloatItem } from './DamageNumber';
 
 interface Props {
@@ -21,6 +23,7 @@ export function BattleScreen({ player, deck, enemies }: Props) {
   const [bannerVisible, setBannerVisible] = useState(false);
   const [bannerTurn, setBannerTurn]   = useState(1);
   const [logVisible, setLogVisible]   = useState(false);
+  const [pendingHandIndex, setPendingHandIndex] = useState<number | null>(null);
   const floatCounter = useRef(0);
   useDebugApi(setState);
 
@@ -37,13 +40,53 @@ export function BattleScreen({ player, deck, enemies }: Props) {
 
   function handleCardClick(handIndex: number) {
     if (state.phase !== 'PlayerTurn') return;
+    if (pendingHandIndex !== null) return;
     const card = state.playerState.hand[handIndex];
     if (state.playerState.currentEnergy < card.cost) return;
 
-    const prevHp = state.enemies.map(e => e.currentHp);
+    if (card.id === 'P018') {
+      setPendingHandIndex(handIndex);
+      return;
+    }
+
+    const prevHp = state.enemies.map(enemy => enemy.currentHp);
     const nextState = playCard(state, handIndex, 0);
     setState(nextState);
     addDamageFloats(nextState, prevHp);
+  }
+
+  function handleCardChoice(chosenCard: Card) {
+    if (pendingHandIndex === null) return;
+    const handIndex = pendingHandIndex;
+    setPendingHandIndex(null);
+
+    const originalCard = state.playerState.hand[handIndex];
+    const prevHp = state.enemies.map(enemy => enemy.currentHp);
+
+    const stateWithChoice: BattleState = {
+      ...state,
+      playerState: {
+        ...state.playerState,
+        hand: state.playerState.hand.map((handCard, index) =>
+          index === handIndex ? chosenCard : handCard
+        ),
+      },
+    };
+    const playedState = playCard(stateWithChoice, handIndex, 0);
+
+    // Victory/Defeat 時は playCard が early return し discardPile に変種が積まれていないので復元不要
+    const restoredState: BattleState = playedState.phase === 'PlayerTurn'
+      ? {
+          ...playedState,
+          playerState: {
+            ...playedState.playerState,
+            discardPile: [...playedState.playerState.discardPile.slice(0, -1), originalCard],
+          },
+        }
+      : playedState;
+
+    setState(restoredState);
+    addDamageFloats(restoredState, prevHp);
   }
 
   function handleEndTurn() {
@@ -96,6 +139,15 @@ export function BattleScreen({ player, deck, enemies }: Props) {
           TURN {turn}
         </span>
       </div>
+
+      {pendingHandIndex !== null && (
+        <CardChoiceModal
+          cards={ukenagareshiVariants}
+          title="受け流し"
+          onSelect={handleCardChoice}
+          onCancel={() => setPendingHandIndex(null)}
+        />
+      )}
 
       {(phase === 'Victory' || phase === 'Defeat') && (
         <div className="phase-overlay">

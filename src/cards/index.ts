@@ -4,6 +4,7 @@ import { kunoichiCards, kunoichiStarterDeck, kunoichiDropCards } from './kunoich
 
 export * from './princess';
 export * from './kunoichi';
+export * from './normal';
 
 export const allCards: Card[] = [...princessCards, ...kunoichiCards];
 export const starterDeck: string[] = [...princessStarterDeck, ...kunoichiStarterDeck];
