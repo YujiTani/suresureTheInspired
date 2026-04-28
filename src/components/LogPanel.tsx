@@ -3,21 +3,19 @@ import type { LogEntry, LogEventType } from '../types';
 
 interface Props {
   log: LogEntry[];
-  showDebug?: boolean;
 }
 
 const EVENT_COLOR: Record<LogEventType, string> = {
-  CardPlay: 'var(--gold-soft)',
-  DamageDealt: 'var(--red-glow)',
-  DamageEvaded: 'var(--purple)',
-  ShieldGained: 'var(--blue)',
-  EnemyAction: 'var(--amber)',
-  TurnStart: 'var(--green)',
-  TurnEnd: 'var(--ink-mute)',
+  CardPlay: '#f6e5b5',
+  DamageDealt: '#ff8f84',
+  DamageEvaded: '#bca5ff',
+  ShieldGained: '#8cbfe6',
+  EnemyAction: '#e7b36d',
+  TurnStart: '#99d39c',
+  TurnEnd: '#8f889f',
 };
 
 export function LogPanel({ log }: Props) {
-  console.log(log)
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,10 +24,10 @@ export function LogPanel({ log }: Props) {
 
   return (
     <div className="log-panel">
-      <div className="log-panel-title">BATTLE LOG</div>
+      <div className="log-panel-title">戦闘ログ</div>
       <div className="log-panel-entries">
         {log.map((entry, index) => (
-          <div key={index} style={{ color: EVENT_COLOR[entry.event] }}>
+          <div key={index} className="log-entry" style={{ color: EVENT_COLOR[entry.event] }}>
             {entry.message}
           </div>
         ))}

@@ -11,12 +11,12 @@ type EnemyKey = keyof typeof enemies;
 
 const CHARACTERS: Record<CharaKey, { player: Player; cards: Card[]; deck: string[] }> = {
   princess: {
-    player: { name: '王女', maxHp: 80, startDeckNo: 1, illustrationUrl: null },
+    player: { name: '王女', maxHp: 120, startDeckNo: 1, illustrationUrl: null },
     cards: princessCards,
     deck: princessStarterDeck,
   },
   kunoichi: {
-    player: { name: 'くのいち', maxHp: 70, startDeckNo: 2, illustrationUrl: null },
+    player: { name: 'くのいち', maxHp: 90, startDeckNo: 2, illustrationUrl: null },
     cards: kunoichiCards,
     deck: kunoichiStarterDeck,
   },
@@ -27,20 +27,19 @@ function resolveDeck(deckIds: string[], cards: Card[]): Card[] {
 }
 
 const ENEMY_LABELS: Record<EnemyKey, string> = {
-  slime:     'スライム（易）',
-  goblin:    'ゴブリン剣士（中）',
+  slime: 'スライム（易）',
+  goblin: 'ゴブリン剣士（中）',
   oniShogun: '鬼将軍（難）',
 };
 
 export function App() {
   const [chara, setChara] = useState<CharaKey>('princess');
-  const [enemyKey, setEnemyKey] = useState<EnemyKey>('slime');
+  const [enemyKey, setEnemyKey] = useState<EnemyKey>('oniShogun');
   const { player, cards, deck } = CHARACTERS[chara];
 
   return (
     <>
-      <header className="game-header">
-        <span className="logo">▸ INSPIRED BY THE SPIRE</span>
+      <div className="dev-switcher">
         {(['princess', 'kunoichi'] as CharaKey[]).map(key => (
           <button
             key={key}
@@ -50,7 +49,6 @@ export function App() {
             {CHARACTERS[key].player.name}
           </button>
         ))}
-        <span className="reset-note" style={{ margin: '0 12px' }}>vs</span>
         {(Object.keys(enemies) as EnemyKey[]).map(key => (
           <button
             key={key}
@@ -60,8 +58,7 @@ export function App() {
             {ENEMY_LABELS[key]}
           </button>
         ))}
-        <span className="reset-note">（切替でリセット）</span>
-      </header>
+      </div>
 
       <BattleScreen
         key={`${chara}-${enemyKey}`}

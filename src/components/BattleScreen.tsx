@@ -15,12 +15,23 @@ interface Props {
   enemies: Enemy[];
 }
 
+function formatIntent(enemyState: BattleState['enemies'][number] | undefined): string {
+  if (!enemyState?.nextAction) return '不明';
+  const act = enemyState.nextAction;
+  if (act.type === 'Attack' || act.type === 'QuickAttack') return `斬撃 ${act.value}`;
+  if (act.type === 'Buff') return `強化 +${act.value}`;
+  if (act.type === 'Debuff') return `弱体 ${act.value}`;
+  if (act.type === 'Heal') return `回復 ${act.value}`;
+  if (act.type === 'Summon') return '召喚';
+  return act.type;
+}
+
 export function BattleScreen({ player, deck, enemies }: Props) {
   const [state, setState] = useState<BattleState>(() => initBattle(player, deck, enemies));
-  const [floats, setFloats]           = useState<FloatItem[]>([]);
+  const [floats, setFloats] = useState<FloatItem[]>([]);
   const [bannerVisible, setBannerVisible] = useState(false);
-  const [bannerTurn, setBannerTurn]   = useState(1);
-  const [logVisible, setLogVisible]   = useState(false);
+  const [bannerTurn, setBannerTurn] = useState(1);
+  const [logVisible, setLogVisible] = useState(true);
   const floatCounter = useRef(0);
   useDebugApi(setState);
 
@@ -57,10 +68,26 @@ export function BattleScreen({ player, deck, enemies }: Props) {
     setTimeout(() => setBannerVisible(false), 1400);
   }
 
-  const { playerState, enemies: enemyStates, phase, turn } = state;
+  const { playerState, enemies: enemyStates, phase } = state;
 
   return (
     <div className="battle-screen">
+      <div className="battle-bg" />
+      <div className="moon" />
+      <div className="ornate-frame" />
+
+      <div className="battle-top-ui">
+        <div className="game-title">Suresure The Inspired</div>
+        <div className="control-buttons">
+          <button className="icon-btn" onClick={() => setLogVisible(v => !v)}>{logVisible ? 'Log 非表示' : 'Log 表示'}</button>
+        </div>
+      </div>
+
+      <div className="next-intent-banner">
+        <span className="next-label">次の行動</span>
+        <span className="next-value">{formatIntent(enemyStates[0])}</span>
+      </div>
+
       {enemyStates[0] && (
         <EnemyArea
           enemyState={enemyStates[0]}
@@ -84,18 +111,6 @@ export function BattleScreen({ player, deck, enemies }: Props) {
 
       <TurnBanner turn={bannerTurn} visible={bannerVisible} />
       {logVisible && <LogPanel log={state.log} />}
-
-      <div style={{
-        position: 'absolute', top: 48, right: 12, zIndex: 110,
-        display: 'flex', alignItems: 'center', gap: 10,
-      }}>
-        <button className="log-toggle-btn" onClick={() => setLogVisible(v => !v)}>
-          {logVisible ? 'LOG ▲' : 'LOG ▼'}
-        </button>
-        <span style={{ fontFamily: 'Cinzel, serif', fontSize: 10, color: '#6e6880', letterSpacing: '.3em' }}>
-          TURN {turn}
-        </span>
-      </div>
 
       {(phase === 'Victory' || phase === 'Defeat') && (
         <div className="phase-overlay">

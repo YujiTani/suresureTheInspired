@@ -6,7 +6,7 @@ interface Props {
 export function TurnBanner({ turn, visible }: Props) {
   return (
     <div className={`turn-banner${visible ? ' on' : ''}`}>
-      TURN {turn}
+      第 {turn} ターン
     </div>
   );
 }

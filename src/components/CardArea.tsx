@@ -18,22 +18,20 @@ export function CardArea({ hand, deckCount, discardCount, currentEnergy, playedI
   return (
     <div className="card-area">
       <div className="pile draw-pile">
-        <div className="pile-icon">📋</div>
-        <div className="pile-label">Draw</div>
+        <div className="pile-icon">山札</div>
         <div className="pile-count">{deckCount}</div>
       </div>
 
       <div className="pile discard-pile">
-        <div className="pile-icon">⚰</div>
-        <div className="pile-label">Discard</div>
+        <div className="pile-icon">捨札</div>
         <div className="pile-count">{discardCount}</div>
       </div>
 
       <div className="hand">
         {hand.map((card, i) => {
           const spread = total <= 1 ? 0 : (i - (total - 1) / 2) / (total - 1);
-          const rot = spread * 10;
-          const lift = Math.abs(spread) * 28;
+          const rot = spread * 9;
+          const lift = Math.abs(spread) * 24;
           return (
             <Card
               key={card.id + i}
@@ -49,7 +47,7 @@ export function CardArea({ hand, deckCount, discardCount, currentEnergy, playedI
 
       {phase === 'PlayerTurn' && (
         <button className="end-turn-btn" onClick={onEndTurn}>
-          Turn End
+          ターン終了
         </button>
       )}
     </div>
