@@ -1,4 +1,7 @@
-import type { Card, StatusEffect } from '../types';
+import type { Card, Rarity, StatusEffect } from '../types';
+import frameGold   from '../assets/frames/card_frame_gold_v2.png';
+import frameSilver from '../assets/frames/card_frame_silver.png';
+import frameCopper from '../assets/frames/card_frame_copper_v2.png';
 
 function formatEffect(effect: StatusEffect, value: number): string {
   switch (effect) {
@@ -49,4 +52,13 @@ export function cardRarityClass(card: Card): 'rarity-common' | 'rarity-uncommon'
     Epic:     'rarity-epic',
   } as const;
   return map[card.rarity];
+}
+
+export function cardFrameImage(rarity: Rarity): string {
+  switch (rarity) {
+    case 'Rare':
+    case 'Epic':     return frameGold;
+    case 'Uncommon': return frameSilver;
+    default:         return frameCopper;
+  }
 }
