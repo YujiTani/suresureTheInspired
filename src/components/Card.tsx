@@ -1,5 +1,5 @@
 import type { Card as CardType } from '../types';
-import { cardTypeLabel, cardRarityClass, cardFrameImage, cardBottomOrnament, formatCardEffect } from '../utils/cardDisplay';
+import { cardTypeLabel, cardRarityClass, cardFrameImage, formatCardEffect } from '../utils/cardDisplay';
 
 interface Props {
   card: CardType;
@@ -14,7 +14,6 @@ export function Card({ card, disabled, played, style, onClick }: Props) {
   const typeLabel = cardTypeLabel(card);
   const effects = formatCardEffect(card);
   const frameImage = cardFrameImage(card.rarity);
-  const bottomOrnament = cardBottomOrnament();
 
   const classes = [
     'card',
@@ -40,7 +39,7 @@ export function Card({ card, disabled, played, style, onClick }: Props) {
           {effects.map((line, index) => <div key={index}>{line}</div>)}
         </div>
       </div>
-      <img className="card-ornament" src={bottomOrnament} alt="" />
+      {/* NOTE: 底部オーナメント画像に不透明背景が含まれておりカード表示を崩すため、描画しない */}
     </div>
   );
 }

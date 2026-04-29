@@ -1,6 +1,5 @@
 import type { Card, Rarity, StatusEffect } from '../types';
 import frameRera  from '../assets/frames/card_frame_rera.png';
-import bottomRera from '../assets/frames/card_bottom_rera.png';
 
 function formatEffect(effect: StatusEffect, value: number): string {
   switch (effect) {
@@ -55,8 +54,4 @@ export function cardRarityClass(card: Card): 'rarity-common' | 'rarity-uncommon'
 
 export function cardFrameImage(_rarity: Rarity): string {
   return frameRera;
-}
-
-export function cardBottomOrnament(): string {
-  return bottomRera;
 }
