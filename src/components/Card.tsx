@@ -1,5 +1,5 @@
 import type { Card as CardType } from '../types';
-import { cardTypeLabel, cardRarityClass, cardFrameImage, formatCardEffect } from '../utils/cardDisplay';
+import { cardTypeLabel, cardRarityClass, cardFrameImage, cardBottomOrnament, formatCardEffect } from '../utils/cardDisplay';
 
 interface Props {
   card: CardType;
@@ -14,6 +14,7 @@ export function Card({ card, disabled, played, style, onClick }: Props) {
   const typeLabel = cardTypeLabel(card);
   const effects = formatCardEffect(card);
   const frameImage = cardFrameImage(card.rarity);
+  const bottomOrnament = cardBottomOrnament();
 
   const classes = [
     'card',
@@ -30,13 +31,16 @@ export function Card({ card, disabled, played, style, onClick }: Props) {
           : <div className="card-illu-motif">{typeLabel}</div>
         }
       </div>
-      <img className="card-frame" src={frameImage} alt="" />
       <div className="card-cost">{card.cost}</div>
-      <div className="card-title">{card.name}</div>
-      <div className="card-text">
-        {effects.map((line, i) => <div key={i}>{line}</div>)}
+      <img className="card-frame" src={frameImage} alt="" />
+      <div className={`card-category ${typeLabel.toLowerCase()}`}>{typeLabel}</div>
+      <div className="card-text-panel">
+        <div className="card-title">{card.name}</div>
+        <div className="card-text">
+          {effects.map((line, index) => <div key={index}>{line}</div>)}
+        </div>
       </div>
-      <div className={`card-type ${typeLabel.toLowerCase()}`}>{typeLabel}</div>
+      <img className="card-ornament" src={bottomOrnament} alt="" />
     </div>
   );
 }

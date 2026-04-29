@@ -1,6 +1,7 @@
 import type { EnemyBattleState } from '../types';
 import type { FloatItem } from './DamageNumber';
 import { DamageNumber } from './DamageNumber';
+import { StatusBadge } from './StatusBadge';
 
 interface Props {
   enemyState: EnemyBattleState;
@@ -65,8 +66,8 @@ export function EnemyArea({ enemyState, floats, shaking }: Props) {
 
         {(weak > 0 || vulnerable > 0) && (
           <div className="enemy-status">
-            {weak > 0 && <span className="status-badge debuff">弱体 {weak}</span>}
-            {vulnerable > 0 && <span className="status-badge debuff">脆弱 {vulnerable}</span>}
+            {weak > 0 && <StatusBadge metaKey="Weak" value={weak} />}
+            {vulnerable > 0 && <StatusBadge metaKey="Vulnerable" value={vulnerable} />}
           </div>
         )}
       </div>

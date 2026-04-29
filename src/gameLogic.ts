@@ -152,9 +152,9 @@ function applyEffectToPlayer(state: BattleState, effect: StatusEffect, value: nu
     case 'Phantom':
       return { ...state, playerState: { ...playerState, phantom: Math.max(0, playerState.phantom + value) } };
     case 'ActionCount':
-      return { ...state, playerState: { ...playerState, actionCount: playerState.actionCount + value } };
+      return { ...state, playerState: { ...playerState, bonusEnergy: playerState.bonusEnergy + value } };
     case 'DiscardDraw':
-      return { ...state, playerState: { ...playerState, discardDrawDelta: playerState.discardDrawDelta + value } };
+      return { ...state, playerState: { ...playerState, bonusDraw: playerState.bonusDraw + value } };
     default:
       return state;
   }
@@ -238,8 +238,8 @@ export function initBattle(player: Player, playerDeck: Card[], enemies: Enemy[])
     weak: 0,
     vulnerable: 0,
     phantom: 0,
-    actionCount: 0,
-    discardDrawDelta: 0,
+    bonusEnergy: 0,
+    bonusDraw: 0,
     activePowers: [],
   };
 
@@ -393,7 +393,7 @@ export function applyCardEffects(state: BattleState, card: Card, targetEnemyInde
 export function startPlayerTurn(state: BattleState): BattleState {
   const decayed = decayStacks(state.playerState, PLAYER_DECAY_FIELDS);
   const diffParts = buildDiffParts(state.playerState, decayed, PLAYER_DIFF_LABELS);
-  const drawCardCount = Math.max(0, INITIAL_HAND_SIZE + decayed.actionCount + decayed.discardDrawDelta);
+  const drawCardCount = Math.max(0, INITIAL_HAND_SIZE + decayed.bonusDraw);
   const activePowers = decayed.activePowers;
 
   let newState = diffParts.length > 0
@@ -410,9 +410,9 @@ export function startPlayerTurn(state: BattleState): BattleState {
     playerState: {
       ...drawCards(decayed, drawCardCount),
       shield: 0,
-      currentEnergy: INITIAL_ENERGY,
-      actionCount: 0,
-      discardDrawDelta: 0,
+      currentEnergy: INITIAL_ENERGY + decayed.bonusEnergy,
+      bonusEnergy: 0,
+      bonusDraw: 0,
     },
   };
 

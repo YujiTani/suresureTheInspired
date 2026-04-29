@@ -42,7 +42,7 @@ const makibishiCard: Card = {
 };
 
 // Ki スタック×1の追加ダメージはゲームロジック側のハンドラーで処理
-const yousenkaKouitoCard: Card = {
+const yousenkaBeniItoCard: Card = {
   id: 'K004',
   cost: 2,
   name: '妖仙火 紅糸',
@@ -83,7 +83,7 @@ const kawariminoCard: Card = {
   target: 'Player',
 };
 
-const bougokiCard: Card = {
+const bougyoCard: Card = {
   id: 'K007',
   cost: 1,
   name: '防御',
@@ -109,7 +109,7 @@ const shuntenshinCard: Card = {
   target: 'Player',
 };
 
-const kabeHaritsukirCard: Card = {
+const kabeHaritsukiCard: Card = {
   id: 'K009',
   cost: 1,
   name: '壁張り付きの術',
@@ -124,7 +124,7 @@ const kabeHaritsukirCard: Card = {
 
 // --- Power Cards ---
 
-const oboroshinoJutsuCard: Card = {
+const oborominojyutsuCard: Card = {
   id: 'K010',
   cost: 3,
   name: '朧身の術',
@@ -165,7 +165,7 @@ const midarekuNaiCard: Card = {
   target: 'All',
 };
 
-const shienmNoHebiCard: Card = {
+const shienNoHebiCard: Card = {
   id: 'K013',
   cost: 2,
   name: '紫煙の蛇',
@@ -208,16 +208,16 @@ export const kunoichiCards: Card[] = [
   suri_giriCard,
   sune_giriCard,
   makibishiCard,
-  yousenkaKouitoCard,
+  yousenkaBeniItoCard,
   renkiCard,
   kawariminoCard,
-  bougokiCard,
+  bougyoCard,
   shuntenshinCard,
-  kabeHaritsukirCard,
-  oboroshinoJutsuCard,
+  kabeHaritsukiCard,
+  oborominojyutsuCard,
   kariNoYoruCard,
   midarekuNaiCard,
-  shienmNoHebiCard,
+  shienNoHebiCard,
   zanzoKenCard,
   kageroMaiCard,
 ];

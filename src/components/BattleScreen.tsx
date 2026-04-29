@@ -15,14 +15,29 @@ interface Props {
   player: Player;
   deck: Card[];
   enemies: Enemy[];
+  startHp?: number;
+  onVictory?: (remainingHp: number) => void;
+  onDefeat?: () => void;
 }
 
-export function BattleScreen({ player, deck, enemies }: Props) {
-  const [state, setState] = useState<BattleState>(() => initBattle(player, deck, enemies));
-  const [floats, setFloats]           = useState<FloatItem[]>([]);
+export function BattleScreen({ player, deck, enemies, startHp, onVictory, onDefeat }: Props) {
+  const [state, setState] = useState<BattleState>(() => {
+    const initial = initBattle(player, deck, enemies);
+    if (startHp !== undefined && startHp <= 0) {
+      throw new Error(`想定外のエラーが発生しました。 ${startHp} が 0 以下になっています`);
+    }
+    return {
+      ...initial,
+      playerState: {
+        ...initial.playerState,
+        currentHp: startHp ?? initial.playerState.currentHp,
+      },
+    };
+  });
+  const [floats, setFloats] = useState<FloatItem[]>([]);
   const [bannerVisible, setBannerVisible] = useState(false);
-  const [bannerTurn, setBannerTurn]   = useState(1);
-  const [logVisible, setLogVisible]   = useState(false);
+  const [bannerTurn, setBannerTurn] = useState(1);
+  const [logVisible, setLogVisible] = useState(false);
   const [pendingHandIndex, setPendingHandIndex] = useState<number | null>(null);
   const floatCounter = useRef(0);
   useDebugApi(setState);
@@ -77,12 +92,12 @@ export function BattleScreen({ player, deck, enemies }: Props) {
     // Victory/Defeat 時は playCard が early return し discardPile に変種が積まれていないので復元不要
     const restoredState: BattleState = playedState.phase === 'PlayerTurn'
       ? {
-          ...playedState,
-          playerState: {
-            ...playedState.playerState,
-            discardPile: [...playedState.playerState.discardPile.slice(0, -1), originalCard],
-          },
-        }
+        ...playedState,
+        playerState: {
+          ...playedState.playerState,
+          discardPile: [...playedState.playerState.discardPile.slice(0, -1), originalCard],
+        },
+      }
       : playedState;
 
     setState(restoredState);
@@ -153,6 +168,24 @@ export function BattleScreen({ player, deck, enemies }: Props) {
         <div className="phase-overlay">
           <div className={`phase-text ${phase.toLowerCase()}`}>
             {phase === 'Victory' ? 'Victory !' : 'Defeat ...'}
+          </div>
+          <div className="phase-actions">
+            {phase === 'Victory' && onVictory && (
+              <button
+                className="phase-btn victory-btn"
+                onClick={() => onVictory(playerState.currentHp)}
+              >
+                マップへ戻る
+              </button>
+            )}
+            {phase === 'Defeat' && onDefeat && (
+              <button
+                className="phase-btn defeat-btn"
+                onClick={onDefeat}
+              >
+                タイトルへ戻る
+              </button>
+            )}
           </div>
         </div>
       )}

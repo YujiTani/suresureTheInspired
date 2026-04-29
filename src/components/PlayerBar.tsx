@@ -1,28 +1,13 @@
 import type { PlayerBattleState, Player } from '../types';
+import { StatusBadge } from './StatusBadge';
 
 interface Props {
   player: Player;
   playerState: PlayerBattleState;
 }
 
-interface BuffEntry {
-  label: string;
-  value: number;
-}
-
 export function PlayerBar({ player, playerState }: Props) {
-  const { currentHp, shield, currentEnergy, attackPower, defensePower, ki, weak, vulnerable, phantom, actionCount, discardDrawDelta } = playerState;
-
-  const buffs: BuffEntry[] = [
-    attackPower !== 0    && { label: `ATK+${attackPower}`,    value: attackPower },
-    defensePower !== 0   && { label: `DEF+${defensePower}`,   value: defensePower },
-    ki > 0               && { label: `気 ${ki}`,               value: ki },
-    weak > 0             && { label: `弱体 ${weak}`,           value: weak },
-    vulnerable > 0       && { label: `脆弱 ${vulnerable}`,    value: vulnerable },
-    phantom > 0          && { label: `分身 ${phantom}`,        value: phantom },
-    actionCount > 0      && { label: `行動+${actionCount}`,    value: actionCount },
-    discardDrawDelta !== 0 && { label: `捨ドロー${discardDrawDelta > 0 ? '+' : ''}${discardDrawDelta}`, value: discardDrawDelta },
-  ].filter((buff): buff is BuffEntry => Boolean(buff));
+  const { currentHp, shield, currentEnergy, attackPower, defensePower, ki, weak, vulnerable, phantom, bonusEnergy, bonusDraw } = playerState;
 
   return (
     <div className="player-bar">
@@ -56,16 +41,25 @@ export function PlayerBar({ player, playerState }: Props) {
         </div>
       </div>
 
-      {buffs.length > 0 && (
-        <div className="stats-right">
-          <div className="buff-cap">Blessings &amp; Hexes</div>
+      <div className="stats-right">
+        {(attackPower !== 0 || defensePower !== 0) && (
           <div className="buff-grid">
-            {buffs.map((buff, index) => (
-              <div key={index} className="buff-badge">{buff.label}</div>
-            ))}
+            {attackPower !== 0 && <div className="buff-badge">{`ATK+${attackPower}`}</div>}
+            {defensePower !== 0 && <div className="buff-badge">{`DEF+${defensePower}`}</div>}
           </div>
-        </div>
-      )}
+        )}
+
+        {(ki > 0 || bonusEnergy > 0 || bonusDraw > 0 || weak > 0 || vulnerable > 0 || phantom > 0) && (
+          <div className="status-grid">
+            {ki > 0 && <StatusBadge metaKey="Ki" value={ki} />}
+            {bonusEnergy > 0 && <StatusBadge metaKey="BonusEnergy" value={bonusEnergy} />}
+            {bonusDraw > 0 && <StatusBadge metaKey="BonusDraw" value={bonusDraw} />}
+            {weak > 0 && <StatusBadge metaKey="Weak" value={weak} />}
+            {vulnerable > 0 && <StatusBadge metaKey="Vulnerable" value={vulnerable} />}
+            {phantom > 0 && <StatusBadge metaKey="Phantom" value={phantom} />}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
