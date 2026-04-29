@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import titleBg from '../assets/backgrounds/title-bg.png';
 
 const EMBER_COLORS = [
@@ -44,6 +44,19 @@ interface TitleScreenProps {
 
 export function TitleScreen({ onStart }: TitleScreenProps) {
   const embers = useMemo(() => generateEmbers(100), []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        onStart();
+      }
+    }
+    addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      removeEventListener('keydown', handleKeyDown);
+    }
+  }, [onStart]);
 
   return (
     <div className="title-screen">

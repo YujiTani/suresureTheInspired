@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Card, Attribute } from '../types';
 
 const EMBER_COLORS = [
@@ -87,13 +87,25 @@ export function CharacterSelectScreen({
     }
   }
 
-  // TODO(human): useEffect でキーボードハンドラを登録してください
-  //   - ArrowLeft  → characters[0].key を選択
-  //   - ArrowRight → characters[1].key を選択
-  //   - Enter      → onConfirm(selected)
-  //   - Escape     → onBack()
-  //   ※ クリーンアップ関数で removeEventListener を忘れずに
-  //   ヒント: useEffect の依存配列は [selected, onConfirm, onBack, characters]
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') {
+        setSelected(characters[1].key);
+      } else if (e.key === 'ArrowLeft') {
+        setSelected(characters[0].key);
+      } else if (e.key === 'Enter') {
+        onConfirm(selected);
+      } else if (e.key === 'Escape') {
+        onBack();
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [selected, onConfirm, onBack, characters]);
 
   const selectedChara = characters.find(chara => chara.key === selected)!;
   const { attributeCounts, avgCost } = calcDeckStats(selectedChara.starterDeck);
@@ -167,7 +179,7 @@ export function CharacterSelectScreen({
           ))}
         </ul>
       </aside>
-      <div className="cs-hint">クリックで選択 • もう一度クリックで決定 • ← → Enter</div>
+      <div className="cs-hint">選択後 • もう一度クリックで決定</div>
     </div>
   );
 }

@@ -15,7 +15,7 @@ const strikeCard: Card = {
   target: 'Single',
 };
 
-const heavyStrikeCard: Card = {
+const heavySlashCard: Card = {
   id: 'P002',
   cost: 2,
   name: 'ヘビースラッシュ',
@@ -275,7 +275,7 @@ const royalCrestCard: Card = {
 
 export const princessCards: Card[] = [
   strikeCard,
-  heavyStrikeCard,
+  heavySlashCard,
   quickStrikeCard,
   slashCard,
   doubleStrikeCard,
