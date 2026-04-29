@@ -241,7 +241,7 @@ const ukenagareshiCard: Card = {
   targetEffects: {},
   illustrationUrl: null,
   rarity: 'Uncommon',
-  description: '6〜9のダメージをプレイヤーが選択する。(9 - 選択値) のシールドを得る。',
+  description: '相手の攻撃を受け流しつつダメージを与える',
   target: 'Single',
   hitCount: 1,
 };

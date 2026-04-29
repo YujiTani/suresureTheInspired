@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <!-- フレーム -->
+  <circle cx="50" cy="50" r="46" fill="none" stroke="#0f172a" stroke-width="8"/>
+  <circle cx="50" cy="50" r="38" fill="#1e2937" stroke="#64748b" stroke-width="4"/>
+  
+  <!-- 気エフェクト（オーブ＋放射） -->
+  <circle cx="50" cy="50" r="28" fill="#22d3ee"/>
+  <circle cx="50" cy="50" r="34" fill="transparent" stroke="#67e8f9" stroke-width="5" opacity="0.5"/>
+  
+  <!-- 放射エネルギー線 -->
+  <g transform="translate(50,50)">
+    <line x1="0" y1="-32" x2="0" y2="-45" stroke="#67e8f9" stroke-width="4" stroke-linecap="round" transform="rotate(0)"/>
+    <line x1="0" y1="-32" x2="0" y2="-45" stroke="#67e8f9" stroke-width="4" stroke-linecap="round" transform="rotate(45)"/>
+    <line x1="0" y1="-32" x2="0" y2="-45" stroke="#67e8f9" stroke-width="4" stroke-linecap="round" transform="rotate(90)"/>
+    <line x1="0" y1="-32" x2="0" y2="-45" stroke="#67e8f9" stroke-width="4" stroke-linecap="round" transform="rotate(135)"/>
+    <line x1="0" y1="-32" x2="0" y2="-45" stroke="#67e8f9" stroke-width="4" stroke-linecap="round" transform="rotate(180)"/>
+    <line x1="0" y1="-32" x2="0" y2="-45" stroke="#67e8f9" stroke-width="4" stroke-linecap="round" transform="rotate(225)"/>
+    <line x1="0" y1="-32" x2="0" y2="-45" stroke="#67e8f9" stroke-width="4" stroke-linecap="round" transform="rotate(270)"/>
+    <line x1="0" y1="-32" x2="0" y2="-45" stroke="#67e8f9" stroke-width="4" stroke-linecap="round" transform="rotate(315)"/>
+  </g>
+  
+  <!-- 中心ハイライト -->
+  <circle cx="46" cy="46" r="9" fill="#ffffff" opacity="0.75"/>
+</svg>

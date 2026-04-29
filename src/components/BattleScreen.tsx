@@ -7,20 +7,38 @@ import { PlayerBar } from './PlayerBar';
 import { CardArea } from './CardArea';
 import { TurnBanner } from './TurnBanner';
 import { LogPanel } from './LogPanel';
+import { CardChoiceModal } from './CardChoiceModal';
+import { ukenagareshiVariants } from '../cards/normal';
 import type { FloatItem } from './DamageNumber';
 
 interface Props {
   player: Player;
   deck: Card[];
   enemies: Enemy[];
+  startHp?: number;
+  onVictory?: (remainingHp: number) => void;
+  onDefeat?: () => void;
 }
 
-export function BattleScreen({ player, deck, enemies }: Props) {
-  const [state, setState] = useState<BattleState>(() => initBattle(player, deck, enemies));
-  const [floats, setFloats]           = useState<FloatItem[]>([]);
+export function BattleScreen({ player, deck, enemies, startHp, onVictory, onDefeat }: Props) {
+  const [state, setState] = useState<BattleState>(() => {
+    const initial = initBattle(player, deck, enemies);
+    if (startHp !== undefined && startHp <= 0) {
+      throw new Error(`想定外のエラーが発生しました。 ${startHp} が 0 以下になっています`);
+    }
+    return {
+      ...initial,
+      playerState: {
+        ...initial.playerState,
+        currentHp: startHp ?? initial.playerState.currentHp,
+      },
+    };
+  });
+  const [floats, setFloats] = useState<FloatItem[]>([]);
   const [bannerVisible, setBannerVisible] = useState(false);
-  const [bannerTurn, setBannerTurn]   = useState(1);
-  const [logVisible, setLogVisible]   = useState(false);
+  const [bannerTurn, setBannerTurn] = useState(1);
+  const [logVisible, setLogVisible] = useState(false);
+  const [pendingHandIndex, setPendingHandIndex] = useState<number | null>(null);
   const floatCounter = useRef(0);
   useDebugApi(setState);
 
@@ -37,13 +55,53 @@ export function BattleScreen({ player, deck, enemies }: Props) {
 
   function handleCardClick(handIndex: number) {
     if (state.phase !== 'PlayerTurn') return;
+    if (pendingHandIndex !== null) return;
     const card = state.playerState.hand[handIndex];
     if (state.playerState.currentEnergy < card.cost) return;
 
-    const prevHp = state.enemies.map(e => e.currentHp);
+    if (card.id === 'P018') {
+      setPendingHandIndex(handIndex);
+      return;
+    }
+
+    const prevHp = state.enemies.map(enemy => enemy.currentHp);
     const nextState = playCard(state, handIndex, 0);
     setState(nextState);
     addDamageFloats(nextState, prevHp);
+  }
+
+  function handleCardChoice(chosenCard: Card) {
+    if (pendingHandIndex === null) return;
+    const handIndex = pendingHandIndex;
+    setPendingHandIndex(null);
+
+    const originalCard = state.playerState.hand[handIndex];
+    const prevHp = state.enemies.map(enemy => enemy.currentHp);
+
+    const stateWithChoice: BattleState = {
+      ...state,
+      playerState: {
+        ...state.playerState,
+        hand: state.playerState.hand.map((handCard, index) =>
+          index === handIndex ? chosenCard : handCard
+        ),
+      },
+    };
+    const playedState = playCard(stateWithChoice, handIndex, 0);
+
+    // Victory/Defeat 時は playCard が early return し discardPile に変種が積まれていないので復元不要
+    const restoredState: BattleState = playedState.phase === 'PlayerTurn'
+      ? {
+        ...playedState,
+        playerState: {
+          ...playedState.playerState,
+          discardPile: [...playedState.playerState.discardPile.slice(0, -1), originalCard],
+        },
+      }
+      : playedState;
+
+    setState(restoredState);
+    addDamageFloats(restoredState, prevHp);
   }
 
   function handleEndTurn() {
@@ -97,10 +155,37 @@ export function BattleScreen({ player, deck, enemies }: Props) {
         </span>
       </div>
 
+      {pendingHandIndex !== null && (
+        <CardChoiceModal
+          cards={ukenagareshiVariants}
+          title="受け流し"
+          onSelect={handleCardChoice}
+          onCancel={() => setPendingHandIndex(null)}
+        />
+      )}
+
       {(phase === 'Victory' || phase === 'Defeat') && (
         <div className="phase-overlay">
           <div className={`phase-text ${phase.toLowerCase()}`}>
             {phase === 'Victory' ? 'Victory !' : 'Defeat ...'}
+          </div>
+          <div className="phase-actions">
+            {phase === 'Victory' && onVictory && (
+              <button
+                className="phase-btn victory-btn"
+                onClick={() => onVictory(playerState.currentHp)}
+              >
+                マップへ戻る
+              </button>
+            )}
+            {phase === 'Defeat' && onDefeat && (
+              <button
+                className="phase-btn defeat-btn"
+                onClick={onDefeat}
+              >
+                タイトルへ戻る
+              </button>
+            )}
           </div>
         </div>
       )}

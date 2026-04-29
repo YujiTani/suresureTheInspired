@@ -20,6 +20,7 @@ export type StatusEffect = 'HP' | 'Shield' | 'AttackPower' | 'DefensePower' | 'D
 export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic';
 export type TurnPhase = 'PlayerTurn' | 'EnemyTurn' | 'Victory' | 'Defeat';
 export type EnemyStrength = 'Weak' | 'Strong' | 'Elite' | 'Boss' | 'FinalBoss';
+export type GamePhase = 'Title' | 'CharacterSelect' | 'Map' | 'Battle' | 'Reward' | 'GameOver';
 export type EnemyActionType = 'Attack' | 'QuickAttack' | 'Buff' | 'Debuff' | 'Heal' | 'Summon';
 export type DropType = 'Card' | 'Item' | 'Gold';
 
@@ -83,8 +84,8 @@ export interface PlayerBattleState extends CombatantState {
   weak: number;
   vulnerable: number;
   phantom: number;
-  actionCount: number;
-  discardDrawDelta: number;
+  bonusEnergy: number;
+  bonusDraw: number;
   activePowers: string[];
 }
 
@@ -110,4 +111,11 @@ export interface RunState {
   currentFloor: number;
   gold: number;
   deck: Card[];
+}
+
+export interface MapNode {
+  floor: number;
+  enemyKey: string;
+  label: string;
+  nodeType: EnemyStrength;
 }
