@@ -229,6 +229,7 @@ export const kunoichiCards: Card[] = [
 ].map((card) => ({
   ...card,
   img: resolveCardArt(kunoichiCardArtModules, card.id),
+  cardArtPosition: null,
 }));
 
 export const kunoichiStarterDeck: string[] = ['K001', 'K001', 'K001', 'K007', 'K007', 'K007', 'K003', 'K004', 'K006', 'K009'];

@@ -407,11 +407,21 @@ body {
 }
 
 /* category label — fits inside the frame's top-right banner */
+.card-category-list {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+}
+
 .card-category {
-  position: absolute; top: 18px; right: 20px; z-index: 4;
+  position: absolute;
+  top: 18px;
+  right: 20px;
   font-family: var(--font-display-en); font-weight: 700;
   font-size: 8px; letter-spacing: .25em; color: var(--gold-soft);
+  display: none;
 }
+.card-category.active { display: block; }
 .card-category.attack  { color: #d46a5a; }
 .card-category.defense { color: #6cbf7d; }
 .card-category.skill   { color: #7ab0e0; }
