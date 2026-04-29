@@ -56,7 +56,3 @@ export function cardRarityClass(card: Card): 'rarity-common' | 'rarity-uncommon'
 export function cardFrameImage(_rarity: Rarity): string {
   return frameRera;
 }
-
-export function cardBottomOrnament(): string {
-  return bottomRera;
-}

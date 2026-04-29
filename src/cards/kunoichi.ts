@@ -1,5 +1,23 @@
 import type { Card } from '../types';
 
+const kunoichiCardArtModules = import.meta.glob('../assets/cards/kunoichi/*.{png,jpg,jpeg,webp,avif}', {
+  eager: true,
+  import: 'default',
+}) as Record<string, string>;
+
+function normalizeFileKey(value: string): string {
+  return value.toLowerCase().replace(/[\s_\-　]/g, '');
+}
+
+function resolveKunoichiCardArt(card: Card): string | null {
+  const fileEntries = Object.entries(kunoichiCardArtModules).map(([path, url]) => {
+    const filename = path.split('/').pop()?.replace(/\.[^.]+$/, '') ?? '';
+    return [normalizeFileKey(filename), url] as const;
+  });
+  const byFileStem = new Map<string, string>(fileEntries);
+  return byFileStem.get(normalizeFileKey(card.id)) ?? byFileStem.get(normalizeFileKey(card.name)) ?? null;
+}
+
 // --- Attack Cards ---
 
 const suri_giriCard: Card = {
@@ -220,7 +238,10 @@ export const kunoichiCards: Card[] = [
   shienNoHebiCard,
   zanzoKenCard,
   kageroMaiCard,
-];
+].map((card) => ({
+  ...card,
+  illustrationUrl: resolveKunoichiCardArt(card),
+}));
 
 export const kunoichiStarterDeck: string[] = ['K001', 'K002', 'K003', 'K004', 'K005', 'K006', 'K007', 'K008', 'K009', 'K010'];
 
