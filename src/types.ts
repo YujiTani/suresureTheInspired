@@ -36,6 +36,10 @@ export interface Card {
   description: string;
   target: TargetType;
   hitCount?: number;
+  cardArtPosition?: {
+    top: string;
+    left: string;
+  } | null;
   evolvedCard?: Card;
 }
 

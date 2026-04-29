@@ -294,7 +294,10 @@ export const princessCards: Card[] = [
   P018Card,
   P019Card,
   P020Card,
-];
+].map((card) => ({
+  ...card,
+  cardArtPosition: null,
+}));
 
 export const princessStarterDeck: string[] = ['P001', 'P001', 'P001', 'P006', 'P006', 'P006', 'P005', 'P007', 'P008', 'P018'];
 

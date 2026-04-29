@@ -23,6 +23,9 @@ export function Card({ card, disabled, played, style, onClick }: Props) {
   const typeLabel = cardTypeLabel(card);
   const effects = formatCardEffect(card);
   const frameImage = cardFrameImage(card.rarity);
+  const cardArtPositionStyle = card.cardArtPosition
+    ? { top: card.cardArtPosition.top, left: card.cardArtPosition.left }
+    : undefined;
 
   const classes = [
     'card',
@@ -35,13 +38,18 @@ export function Card({ card, disabled, played, style, onClick }: Props) {
     <div className={classes} style={style} onClick={disabled ? undefined : onClick}>
       <div className="card-illu">
         {card.img
-          ? <img className="card-illu-img" src={card.img} alt={card.name} />
+          ? <img className="card-illu-img" style={cardArtPositionStyle} src={card.img} alt={card.name} />
           : <div className="card-illu-motif">{typeLabel}</div>
         }
       </div>
       <img className="card-frame" src={frameImage} alt={`${card.rarity} frame`} />
       <div className="card-cost">{card.cost}</div>
-      <div className={`card-category ${typeLabel.toLowerCase()}`}>{typeLabel}</div>
+      <div className="card-category-list">
+        <div className={`card-category attack ${card.attribute === 'Attack' ? 'active' : ''}`}>ATTACK</div>
+        <div className={`card-category defense ${card.attribute === 'Defense' ? 'active' : ''}`}>DEFENSE</div>
+        <div className={`card-category skill ${card.attribute === 'Skill' ? 'active' : ''}`}>SKILL</div>
+        <div className={`card-category power ${card.attribute === 'Power' ? 'active' : ''}`}>POWER</div>
+      </div>
       <div className="card-text-panel">
         <div className="card-title">{card.name}</div>
         <div className="card-text">

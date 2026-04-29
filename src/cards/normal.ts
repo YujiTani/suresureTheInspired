@@ -13,4 +13,5 @@ export const ukenagareshiVariants: Card[] = [6, 7, 8, 9].map((damage) => ({
   description: '相手の攻撃を受け流しつつダメージを与える',
   target: 'Single' as const,
   hitCount: 1,
+  cardArtPosition: null,
 }));
