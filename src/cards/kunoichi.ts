@@ -1,26 +1,14 @@
 import type { Card } from '../types';
+import { resolveCardArt } from './resolveCardArt';
 
 const kunoichiCardArtModules = import.meta.glob('../assets/cards/kunoichi/*.{png,jpg,jpeg,webp,avif}', {
   eager: true,
   import: 'default',
 }) as Record<string, string>;
 
-function normalizeFileKey(value: string): string {
-  return value.toLowerCase().replace(/[\s_\-　]/g, '');
-}
-
-function resolveKunoichiCardArt(card: Card): string | null {
-  const fileEntries = Object.entries(kunoichiCardArtModules).map(([path, url]) => {
-    const filename = path.split('/').pop()?.replace(/\.[^.]+$/, '') ?? '';
-    return [normalizeFileKey(filename), url] as const;
-  });
-  const byFileStem = new Map<string, string>(fileEntries);
-  return byFileStem.get(normalizeFileKey(card.id)) ?? byFileStem.get(normalizeFileKey(card.name)) ?? null;
-}
-
 // --- Attack Cards ---
 
-const suri_giriCard: Card = {
+const K001Card: Card = {
   id: 'K001',
   cost: 1,
   name: '擦り斬り',
@@ -33,7 +21,7 @@ const suri_giriCard: Card = {
   target: 'Single',
 };
 
-const sune_giriCard: Card = {
+const K002Card: Card = {
   id: 'K002',
   cost: 1,
   name: '脛斬り',
@@ -46,7 +34,7 @@ const sune_giriCard: Card = {
   target: 'Single',
 };
 
-const makibishiCard: Card = {
+const K003Card: Card = {
   id: 'K003',
   cost: 0,
   name: 'まきびし',
@@ -60,7 +48,7 @@ const makibishiCard: Card = {
 };
 
 // Ki スタック×1の追加ダメージはゲームロジック側のハンドラーで処理
-const yousenkaBeniItoCard: Card = {
+const K004Card: Card = {
   id: 'K004',
   cost: 2,
   name: '妖仙火 紅糸',
@@ -75,7 +63,7 @@ const yousenkaBeniItoCard: Card = {
 
 // --- Skill Cards ---
 
-const renkiCard: Card = {
+const K005Card: Card = {
   id: 'K005',
   cost: 3,
   name: '練気',
@@ -88,7 +76,7 @@ const renkiCard: Card = {
   target: 'Player',
 };
 
-const kawariminoCard: Card = {
+const K006Card: Card = {
   id: 'K006',
   cost: 1,
   name: '変わり身の術',
@@ -101,7 +89,7 @@ const kawariminoCard: Card = {
   target: 'Player',
 };
 
-const bougyoCard: Card = {
+const K007Card: Card = {
   id: 'K007',
   cost: 1,
   name: '防御',
@@ -114,7 +102,7 @@ const bougyoCard: Card = {
   target: 'Player',
 };
 
-const shuntenshinCard: Card = {
+const K008Card: Card = {
   id: 'K008',
   cost: 1,
   name: '瞬転身',
@@ -127,7 +115,7 @@ const shuntenshinCard: Card = {
   target: 'Player',
 };
 
-const kabeHaritsukiCard: Card = {
+const K009Card: Card = {
   id: 'K009',
   cost: 1,
   name: '壁張り付きの術',
@@ -142,7 +130,7 @@ const kabeHaritsukiCard: Card = {
 
 // --- Power Cards ---
 
-const oborominojyutsuCard: Card = {
+const K010Card: Card = {
   id: 'K010',
   cost: 3,
   name: '朧身の術',
@@ -157,7 +145,7 @@ const oborominojyutsuCard: Card = {
 
 // --- Drop Cards ---
 
-const kariNoYoruCard: Card = {
+const K011Card: Card = {
   id: 'K011',
   cost: 1,
   name: '狩の夜',
@@ -170,7 +158,7 @@ const kariNoYoruCard: Card = {
   target: 'Player',
 };
 
-const midarekuNaiCard: Card = {
+const K012Card: Card = {
   id: 'K012',
   cost: 2,
   name: '乱れ苦無',
@@ -183,7 +171,7 @@ const midarekuNaiCard: Card = {
   target: 'All',
 };
 
-const shienNoHebiCard: Card = {
+const K013Card: Card = {
   id: 'K013',
   cost: 2,
   name: '紫煙の蛇',
@@ -196,7 +184,7 @@ const shienNoHebiCard: Card = {
   target: 'All',
 };
 
-const zanzoKenCard: Card = {
+const K014Card: Card = {
   id: 'K014',
   cost: 1,
   name: '残影剣',
@@ -209,7 +197,7 @@ const zanzoKenCard: Card = {
   target: 'Single',
 };
 
-const kageroMaiCard: Card = {
+const K015Card: Card = {
   id: 'K015',
   cost: 3,
   name: '影狼舞い',
@@ -223,26 +211,29 @@ const kageroMaiCard: Card = {
 };
 
 export const kunoichiCards: Card[] = [
-  suri_giriCard,
-  sune_giriCard,
-  makibishiCard,
-  yousenkaBeniItoCard,
-  renkiCard,
-  kawariminoCard,
-  bougyoCard,
-  shuntenshinCard,
-  kabeHaritsukiCard,
-  oborominojyutsuCard,
-  kariNoYoruCard,
-  midarekuNaiCard,
-  shienNoHebiCard,
-  zanzoKenCard,
-  kageroMaiCard,
+  K001Card,
+  K002Card,
+  K003Card,
+  K004Card,
+  K005Card,
+  K006Card,
+  K007Card,
+  K008Card,
+  K009Card,
+  K010Card,
+  K011Card,
+  K012Card,
+  K013Card,
+  K014Card,
+  K015Card,
 ].map((card) => ({
   ...card,
-  illustrationUrl: resolveKunoichiCardArt(card),
+  illustrationUrl: resolveCardArt(kunoichiCardArtModules, card.id),
 }));
 
-export const kunoichiStarterDeck: string[] = ['K001', 'K002', 'K003', 'K004', 'K005', 'K006', 'K007', 'K008', 'K009', 'K010'];
+export const kunoichiStarterDeck: string[] = ['K001', 'K001', 'K001', 'K007', 'K007', 'K007', 'K003', 'K004', 'K006', 'K009'];
 
-export const kunoichiDropCards: string[] = ['K011', 'K012', 'K013', 'K014', 'K015'];
+const kunoichiBasicCardIds = new Set(['K001', 'K007']);
+export const kunoichiDropCards: string[] = kunoichiCards
+  .map((card) => card.id)
+  .filter((id) => !kunoichiBasicCardIds.has(id));

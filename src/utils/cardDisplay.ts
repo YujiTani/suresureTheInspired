@@ -1,6 +1,5 @@
 import type { Card, Rarity, StatusEffect } from '../types';
 import frameRera from '../assets/frames/card_Frame_Rare.png';
-import bottomRera from '../assets/frames/card_bottom_rera.png';
 
 function formatEffect(effect: StatusEffect, value: number): string {
   switch (effect) {
@@ -19,6 +18,11 @@ function formatEffect(effect: StatusEffect, value: number): string {
   }
 }
 
+// カード効果をテキスト化する関数
+// 自分にかかる効果は「自: 」をつけて表示する
+// HPのダメージは「ダメージ」として表示し、複数ヒットする場合は「×ヒット数」をつける
+// 例: HP-10の効果が2ヒットする場合は「10ダメージ × 2ヒット」と表示する
+// 
 export function formatCardEffect(card: Card): string[] {
   const lines: string[] = [];
 
@@ -38,6 +42,7 @@ export function formatCardEffect(card: Card): string[] {
   return lines;
 }
 
+// カードの属性をテキスト化する関数
 export function cardTypeLabel(card: Card): 'ATTACK' | 'DEFENSE' | 'SKILL' | 'POWER' {
   const map = { Attack: 'ATTACK', Defense: 'DEFENSE', Skill: 'SKILL', Power: 'POWER' } as const;
   return map[card.attribute];

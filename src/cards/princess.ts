@@ -2,7 +2,7 @@ import type { Card } from '../types';
 
 // --- Attack Cards ---
 
-const strikeCard: Card = {
+const P001Card: Card = {
   id: 'P001',
   cost: 1,
   name: '飛び蹴り',
@@ -15,7 +15,7 @@ const strikeCard: Card = {
   target: 'Single',
 };
 
-const heavySlashCard: Card = {
+const P002Card: Card = {
   id: 'P002',
   cost: 2,
   name: 'ヘビースラッシュ',
@@ -28,7 +28,7 @@ const heavySlashCard: Card = {
   target: 'Single',
 };
 
-const quickStrikeCard: Card = {
+const P003Card: Card = {
   id: 'P003',
   cost: 0,
   name: 'キック',
@@ -41,7 +41,7 @@ const quickStrikeCard: Card = {
   target: 'Single',
 };
 
-const slashCard: Card = {
+const P004Card: Card = {
   id: 'P004',
   cost: 1,
   name: '突き',
@@ -54,13 +54,13 @@ const slashCard: Card = {
   target: 'Single',
 };
 
-const doubleStrikeCard: Card = {
+const P005Card: Card = {
   id: 'P005',
   cost: 2,
   name: 'ダブルスラッシュ',
   attribute: 'Attack',
   selfEffects: {},
-  targetEffects: { HP: -10 },
+  targetEffects: { HP: -5 },
   illustrationUrl: null,
   rarity: 'Common',
   description: '敵に5ダメージを2回与える。',
@@ -70,7 +70,7 @@ const doubleStrikeCard: Card = {
 
 // --- Defense Cards ---
 
-const guardCard: Card = {
+const P006Card: Card = {
   id: 'P006',
   cost: 1,
   name: 'ガード',
@@ -83,7 +83,7 @@ const guardCard: Card = {
   target: 'Player',
 };
 
-const ironShieldCard: Card = {
+const P007Card: Card = {
   id: 'P007',
   cost: 2,
   name: 'アイアンシールド',
@@ -96,7 +96,7 @@ const ironShieldCard: Card = {
   target: 'Player',
 };
 
-const dodgeCard: Card = {
+const P008Card: Card = {
   id: 'P008',
   cost: 1,
   name: 'ドッジ',
@@ -109,7 +109,7 @@ const dodgeCard: Card = {
   target: 'Player',
 };
 
-const fortifyCard: Card = {
+const P009Card: Card = {
   id: 'P009',
   cost: 0,
   name: 'フォーティファイ',
@@ -124,7 +124,7 @@ const fortifyCard: Card = {
 
 // --- Skill Cards ---
 
-const insightCard: Card = {
+const P010Card: Card = {
   id: 'P010',
   cost: 1,
   name: 'インサイト',
@@ -139,7 +139,7 @@ const insightCard: Card = {
 
 // --- Drop Cards ---
 
-const fusekirCard: Card = {
+const P011Card: Card = {
   id: 'P011',
   cost: 2,
   name: '布石',
@@ -152,7 +152,7 @@ const fusekirCard: Card = {
   target: 'Single',
 };
 
-const galeSlashCard: Card = {
+const P012Card: Card = {
   id: 'P012',
   cost: 3,
   name: 'ゲイルスラッシュ',
@@ -165,10 +165,10 @@ const galeSlashCard: Card = {
   target: 'All',
 };
 
-const vierSchlagCard: Card = {
+const P013Card: Card = {
   id: 'P013',
   cost: 3,
-  name: 'Vier Schlag',
+  name: 'ヴィアシュラーク',
   attribute: 'Attack',
   selfEffects: {},
   targetEffects: { HP: -6 },
@@ -179,7 +179,7 @@ const vierSchlagCard: Card = {
   hitCount: 4,
 };
 
-const towerShieldCard: Card = {
+const P014Card: Card = {
   id: 'P014',
   cost: 3,
   name: 'タワーシールド',
@@ -192,10 +192,10 @@ const towerShieldCard: Card = {
   target: 'Player',
 };
 
-const wutCard: Card = {
+const P015Card: Card = {
   id: 'P015',
   cost: 2,
-  name: 'Wut',
+  name: '激昂',
   attribute: 'Skill',
   selfEffects: { HP: -3, AttackPower: 1, DefensePower: -1 },
   targetEffects: {},
@@ -205,7 +205,7 @@ const wutCard: Card = {
   target: 'Player',
 };
 
-const rinzenCard: Card = {
+const P016Card: Card = {
   id: 'P016',
   cost: 1,
   name: '凛然',
@@ -218,7 +218,7 @@ const rinzenCard: Card = {
   target: 'Single',
 };
 
-const eatTooMuchCard: Card = {
+const P017Card: Card = {
   id: 'P017',
   cost: 3,
   name: '食べすぎた...',
@@ -232,7 +232,7 @@ const eatTooMuchCard: Card = {
 };
 
 // 可変ダメージ/シールドの選択はゲームロジック側のハンドラーで処理
-const ukenagareshiCard: Card = {
+const P018Card: Card = {
   id: 'P018',
   cost: 1,
   name: '受け流し',
@@ -246,7 +246,7 @@ const ukenagareshiCard: Card = {
   hitCount: 1,
 };
 
-const kachinanoCard: Card = {
+const P019Card: Card = {
   id: 'P019',
   cost: 2,
   name: '勝ち名乗り',
@@ -259,7 +259,7 @@ const kachinanoCard: Card = {
   target: 'Player',
 };
 
-const royalCrestCard: Card = {
+const P020Card: Card = {
   id: 'P020',
   cost: 2,
   name: '王家の紋章',
@@ -274,28 +274,31 @@ const royalCrestCard: Card = {
 };
 
 export const princessCards: Card[] = [
-  strikeCard,
-  heavySlashCard,
-  quickStrikeCard,
-  slashCard,
-  doubleStrikeCard,
-  guardCard,
-  ironShieldCard,
-  dodgeCard,
-  fortifyCard,
-  insightCard,
-  fusekirCard,
-  galeSlashCard,
-  vierSchlagCard,
-  towerShieldCard,
-  wutCard,
-  rinzenCard,
-  eatTooMuchCard,
-  ukenagareshiCard,
-  kachinanoCard,
-  royalCrestCard,
+  P001Card,
+  P002Card,
+  P003Card,
+  P004Card,
+  P005Card,
+  P006Card,
+  P007Card,
+  P008Card,
+  P009Card,
+  P010Card,
+  P011Card,
+  P012Card,
+  P013Card,
+  P014Card,
+  P015Card,
+  P016Card,
+  P017Card,
+  P018Card,
+  P019Card,
+  P020Card,
 ];
 
-export const princessStarterDeck: string[] = ['P001', 'P002', 'P003', 'P004', 'P005', 'P006', 'P007', 'P008', 'P009', 'P010'];
+export const princessStarterDeck: string[] = ['P001', 'P001', 'P001', 'P006', 'P006', 'P006', 'P005', 'P007', 'P008', 'P018'];
 
-export const princessDropCards: string[] = ['P011', 'P012', 'P013', 'P014', 'P015', 'P016', 'P017', 'P018', 'P019', 'P020'];
+const princessBasicCardIds = new Set(['P001', 'P006']);
+export const princessDropCards: string[] = princessCards
+  .map((card) => card.id)
+  .filter((id) => !princessBasicCardIds.has(id));

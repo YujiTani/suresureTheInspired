@@ -334,7 +334,7 @@ body {
 /* ─── Card ─── */
 .card {
   pointer-events: auto;
-  position: relative; width: 180px; aspect-ratio: 941 / 1672;
+  position: relative; width: 180px; aspect-ratio: 5 / 7;
   margin: 0 -14px;
   transform-origin: 50% 120%;
   transition: transform .25s cubic-bezier(.2,.8,.2,1), filter .25s;
@@ -363,7 +363,8 @@ body {
   background: #08060f;
 }
 .card-illu-img {
-  width: 100%; height: 100%; object-fit: cover; object-position: top center;
+  width: 100%; height: 100%; aspect-ratio: 5 / 7;
+  object-fit: cover; object-position: top center;
 }
 .card-illu-motif {
   position: absolute; inset: 0; display: grid; place-items: center;
@@ -382,7 +383,10 @@ body {
 
 /* frame image — overlays illustration and cost */
 .card-frame {
-  position: absolute; inset: 0; width: 100%; height: 100%;
+  position: absolute; inset: 0;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   pointer-events: none; z-index: 3;
 }
 
@@ -977,6 +981,7 @@ body {
   color: var(--gold);
   opacity: 0.85;
   margin-top: 4px;
+  white-space: nowrap;
 }
 
 .cs-tagline {
@@ -985,8 +990,8 @@ body {
   color: var(--ink-dim);
   letter-spacing: 0.08em;
   line-height: 1.5;
-  max-width: 260px;
   margin-top: 2px;
+  white-space: nowrap;
 }
 
 /* ─── CharacterSelect: Deck Panel ─── */
