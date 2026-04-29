@@ -3,7 +3,7 @@ import type { Enemy } from '../../types';
 export const oniShogun: Enemy = {
   name: '鬼将軍',
   maxHp: 120,
-  illustrationUrl: null,
+  img: null,
   strength: 'Elite',
   enemyActions: [
     { type: 'Attack',      value: 18, probability: 0.45 },

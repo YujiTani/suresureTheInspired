@@ -21,12 +21,12 @@ type EnemyKey = keyof typeof enemies;
 
 const CHARACTERS: Record<CharaKey, { player: Player; cards: Card[]; deck: string[] }> = {
   princess: {
-    player: { name: '王女', maxHp: 80, startDeckNo: 1, illustrationUrl: princessImg },
+    player: { name: '王女', maxHp: 80, startDeckNo: 1, img: princessImg },
     cards: princessCards,
     deck: princessStarterDeck,
   },
   kunoichi: {
-    player: { name: 'くのいち', maxHp: 70, startDeckNo: 2, illustrationUrl: kunoichiImg },
+    player: { name: 'くのいち', maxHp: 70, startDeckNo: 2, img: kunoichiImg },
     cards: kunoichiCards,
     deck: kunoichiStarterDeck,
   },
@@ -43,7 +43,7 @@ const CHARA_OPTIONS: CharaOption[] = [
     archetype: 'STANDARD',
     tagline: '剣と盾を使った攻守のバランスの良い戦闘スタイル',
     maxHp: 80,
-    illustrationUrl: princessImg,
+    img: princessImg,
     starterDeck: resolveDeck(princessStarterDeck, princessCards),
   },
   {
@@ -52,7 +52,7 @@ const CHARA_OPTIONS: CharaOption[] = [
     archetype: 'TECHNICAL',
     tagline: '気と残像で翻弄するテクニカルな戦闘スタイル',
     maxHp: 70,
-    illustrationUrl: kunoichiImg,
+    img: kunoichiImg,
     starterDeck: resolveDeck(kunoichiStarterDeck, kunoichiCards),
   },
 ];

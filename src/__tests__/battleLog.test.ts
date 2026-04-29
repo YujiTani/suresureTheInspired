@@ -8,7 +8,7 @@ const testPlayer: Player = {
   name: 'テストプレイヤー',
   maxHp: 80,
   startDeckNo: 1,
-  illustrationUrl: null,
+  img: null,
 };
 
 const strikeCard: Card = {
@@ -18,7 +18,7 @@ const strikeCard: Card = {
   attribute: 'Attack',
   selfEffects: {},
   targetEffects: { HP: -6 },
-  illustrationUrl: null,
+  img: null,
   rarity: 'Common',
   description: '6ダメージ',
   target: 'Single',
@@ -27,7 +27,7 @@ const strikeCard: Card = {
 const testEnemy: Enemy = {
   name: 'テスト敵',
   maxHp: 50,
-  illustrationUrl: null,
+  img: null,
   strength: 'Weak',
   enemyActions: [
     { type: 'Attack', value: 8, probability: 1.0 },

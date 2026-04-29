@@ -59,7 +59,7 @@ export interface CharaOption {
   archetype: string;
   tagline: string;
   maxHp: number;
-  illustrationUrl: string | null;
+  img: string | null;
   starterDeck: Card[];
 }
 
@@ -141,10 +141,10 @@ export function CharacterSelectScreen({
             onClick={() => handleCharacterClick(chara.key)}
           >
             <div className="cs-halo" />
-            {chara.illustrationUrl && (
+            {chara.img && (
               <img
                 className="cs-chara-img"
-                src={chara.illustrationUrl}
+                src={chara.img}
                 alt={chara.name}
               />
             )}

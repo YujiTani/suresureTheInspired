@@ -31,7 +31,7 @@ export interface Card {
   attribute: Attribute;
   selfEffects: Partial<Record<StatusEffect, number>>;
   targetEffects: Partial<Record<StatusEffect, number>>;
-  illustrationUrl: string | null;
+  img: string | null;
   rarity: Rarity;
   description: string;
   target: TargetType;
@@ -43,7 +43,7 @@ export interface Player {
   name: string;
   maxHp: number;
   startDeckNo: number;
-  illustrationUrl: string | null;
+  img: string | null;
 }
 
 export interface EnemyAction {
@@ -62,7 +62,7 @@ export interface DropTableEntry {
 export interface Enemy {
   name: string;
   maxHp: number;
-  illustrationUrl: string | null;
+  img: string | null;
   strength: EnemyStrength;
   enemyActions: EnemyAction[];
   dropTable: DropTableEntry[];

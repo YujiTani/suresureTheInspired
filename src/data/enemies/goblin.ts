@@ -3,7 +3,7 @@ import type { Enemy } from '../../types';
 export const goblin: Enemy = {
   name: 'ゴブリン剣士',
   maxHp: 65,
-  illustrationUrl: null,
+  img: null,
   strength: 'Strong',
   enemyActions: [
     { type: 'Attack',      value: 10, probability: 0.4 },

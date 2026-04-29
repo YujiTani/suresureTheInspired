@@ -334,7 +334,8 @@ body {
 /* ─── Card ─── */
 .card {
   pointer-events: auto;
-  position: relative; width: 180px; aspect-ratio: 5 / 7;
+  position: relative; width: 180px; aspect-ratio: 455 / 825;
+  border-radius: 10px; overflow: hidden;
   margin: 0 -14px;
   transform-origin: 50% 120%;
   transition: transform .25s cubic-bezier(.2,.8,.2,1), filter .25s;
@@ -359,12 +360,20 @@ body {
 
 /* illustration — behind frame */
 .card-illu {
-  position: absolute; inset: 0; z-index: 1; overflow: hidden;
-  background: #08060f;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
 }
 .card-illu-img {
-  width: 100%; height: 100%; aspect-ratio: 5 / 7;
-  object-fit: cover; object-position: top center;
+  width: 86%;
+  height: 86%;
+  aspect-ratio: 455 / 825;
+  object-fit: cover;
+  position: absolute;
+  left: 6%;
+  top: 5%;
+  border-radius: 12%;
 }
 .card-illu-motif {
   position: absolute; inset: 0; display: grid; place-items: center;
@@ -373,20 +382,27 @@ body {
 
 /* cost badge — below frame so the frame's circle ornament acts as the border */
 .card-cost {
-  position: absolute; top: 10px; left: 10px; z-index: 2;
-  width: 30px; height: 30px; border-radius: 50%;
+  position: absolute;
+  top: 11px;
+  left: 11px;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   display: grid; place-items: center;
   background: radial-gradient(circle at 35% 30%, #ffd27a, #f39c12 45%, #7a4a08 100%);
   box-shadow: 0 0 14px rgba(243,156,18,.55), inset 0 0 10px rgba(255,230,150,.55);
-  font-family: var(--font-numeric); font-weight: 700; font-size: 16px; color: #2b1a03;
+  font-family: var(--font-numeric);
+  font-weight: 700;
+  font-size: 16px;
+  color: #2b1a03;
 }
 
 /* frame image — overlays illustration and cost */
 .card-frame {
   position: absolute; inset: 0;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+  width: 100%; height: 100%;
+  object-fit: contain;
   pointer-events: none; z-index: 3;
 }
 
@@ -403,15 +419,15 @@ body {
 
 /* dark text panel — bottom 40% of card */
 .card-text-panel {
-  position: absolute; left: 10px; right: 10px; bottom: 28px;
-  height: 40%;
-  z-index: 4;
+  position: absolute; left: 10px; right: 10px; bottom: 24px;
+  height: 35%;
+  z-index: 2;
   background: linear-gradient(180deg,
     rgba(8,6,15,0) 0%,
-    rgba(8,6,15,.92) 18%,
-    rgba(8,6,15,.97) 100%);
-  border-top: 1px solid rgba(200,169,81,.2);
-  padding: 14px 10px 8px;
+    rgba(8,6,15,.65) 15%,
+    rgba(8,6,15,1) 100%);
+  border-radius: 10%;
+  padding: 10px 6px 6px;
   display: flex; flex-direction: column; gap: 5px; align-items: center;
 }
 
