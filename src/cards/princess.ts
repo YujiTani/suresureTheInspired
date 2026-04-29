@@ -275,7 +275,7 @@ const royalCrestCard: Card = {
 
 export const princessCards: Card[] = [
   strikeCard,
-  heavyStrikeCard,
+  heavySlashCard,
   quickStrikeCard,
   slashCard,
   doubleStrikeCard,
