@@ -962,7 +962,7 @@ body {
   position: relative;
   z-index: 2;
   margin-top: 28px;
-  font-size: 10px;
+  font-size: 14px;
   color: var(--ink-mute);
   letter-spacing: 0.12em;
 }
