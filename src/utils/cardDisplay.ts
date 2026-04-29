@@ -1,21 +1,21 @@
 import type { Card, Rarity, StatusEffect } from '../types';
-import frameRera  from '../assets/frames/card_frame_rera.png';
+import frameRera from '../assets/frames/card_Frame_Rare.png';
 import bottomRera from '../assets/frames/card_bottom_rera.png';
 
 function formatEffect(effect: StatusEffect, value: number): string {
   switch (effect) {
-    case 'HP':         return value < 0 ? `${Math.abs(value)}ダメージ` : `HP+${value}`;
-    case 'Shield':     return `シールド+${value}`;
-    case 'AttackPower':  return `攻撃力${value > 0 ? '+' : ''}${value}`;
+    case 'HP': return value < 0 ? `${Math.abs(value)}ダメージ` : `HP+${value}`;
+    case 'Shield': return `シールド+${value}`;
+    case 'AttackPower': return `攻撃力${value > 0 ? '+' : ''}${value}`;
     case 'DefensePower': return `防御力${value > 0 ? '+' : ''}${value}`;
-    case 'DeckDraw':   return `${value}ドロー`;
-    case 'DiscardDraw':return `捨札ドロー${value > 0 ? '+' : ''}${value}`;
-    case 'ActionCount':return `行動+${value}`;
-    case 'Ki':         return `気${value > 0 ? '+' : ''}${value}`;
-    case 'Weak':       return `弱体+${value}`;
-    case 'Phantom':    return `分身+${value}`;
+    case 'DeckDraw': return `${value}ドロー`;
+    case 'DiscardDraw': return `捨札ドロー${value > 0 ? '+' : ''}${value}`;
+    case 'ActionCount': return `行動+${value}`;
+    case 'Ki': return `気${value > 0 ? '+' : ''}${value}`;
+    case 'Weak': return `弱体+${value}`;
+    case 'Phantom': return `分身+${value}`;
     case 'Vulnerable': return `脆弱+${value}`;
-    default:           return '';
+    default: return '';
   }
 }
 
@@ -45,10 +45,10 @@ export function cardTypeLabel(card: Card): 'ATTACK' | 'DEFENSE' | 'SKILL' | 'POW
 
 export function cardRarityClass(card: Card): 'rarity-common' | 'rarity-uncommon' | 'rarity-rare' | 'rarity-epic' {
   const map = {
-    Common:   'rarity-common',
+    Common: 'rarity-common',
     Uncommon: 'rarity-uncommon',
-    Rare:     'rarity-rare',
-    Epic:     'rarity-epic',
+    Rare: 'rarity-rare',
+    Epic: 'rarity-epic',
   } as const;
   return map[card.rarity];
 }
