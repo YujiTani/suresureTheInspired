@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import titleBg from '../assets/backgrounds/title-bg.png';
 
 const EMBER_COLORS = [
@@ -44,6 +44,8 @@ interface TitleScreenProps {
 
 export function TitleScreen({ onStart }: TitleScreenProps) {
   const embers = useMemo(() => generateEmbers(100), []);
+  // ゲームBGMのon・off を行う
+  const [isBgmOn, setIsBgmOn] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -52,11 +54,24 @@ export function TitleScreen({ onStart }: TitleScreenProps) {
       }
     }
     addEventListener('keydown', handleKeyDown);
+    setIsBgmOn(true); // タイトル画面でBGMをオンにする
 
     return () => {
       removeEventListener('keydown', handleKeyDown);
+      setIsBgmOn(false); // タイトル画面を離れるときにBGMをオフにする
     }
   }, [onStart]);
+
+  useEffect(() => {
+    const audio = new Audio('/assets/audio/荊の庭.mp3');
+    audio.loop = true;
+
+    if (isBgmOn) {
+      audio.play();
+    } else {
+      audio.pause();
+    }
+  }, [isBgmOn]);
 
   return (
     <div className="title-screen">
@@ -85,7 +100,8 @@ export function TitleScreen({ onStart }: TitleScreenProps) {
         <button className="title-start-btn" onClick={onStart}>
           GAME START
         </button>
+        <button className="bgm-toggle-btn" onClick={() => setIsBgmOn(prev => !prev)}>♪</button>
       </div>
-    </div>
+    </div >
   );
 }
