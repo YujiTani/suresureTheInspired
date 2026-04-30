@@ -121,39 +121,6 @@ export function App() {
   }
 
   useEffect(() => {
-    const inField = gamePhase === 'Title' || gamePhase === 'CharacterSelect' || gamePhase === 'Map';
-    const inBattle = gamePhase === 'Battle' || gamePhase === 'Reward';
-
-    if (!bgmEnabled) {
-      if (fieldFadeIntervalRef.current !== null) clearInterval(fieldFadeIntervalRef.current);
-      if (battleFadeIntervalRef.current !== null) clearInterval(battleFadeIntervalRef.current);
-      fieldFadeIntervalRef.current = null;
-      battleFadeIntervalRef.current = null;
-      fieldAudio.volume = 0;
-      battleAudio.volume = 0;
-      fieldAudio.pause();
-      battleAudio.pause();
-      return;
-    }
-
-    fieldAudio.play().catch(() => undefined);
-    battleAudio.play().catch(() => undefined);
-
-    if (inField) {
-      runFade(fieldAudio, bgmVolume, fieldFadeIntervalRef);
-      runFade(battleAudio, 0, battleFadeIntervalRef);
-    } else if (inBattle) {
-      runFade(fieldAudio, 0, fieldFadeIntervalRef);
-      runFade(battleAudio, bgmVolume, battleFadeIntervalRef);
-    }
-  }, [gamePhase, fieldAudio, battleAudio]);
-
-
-
-  useEffect(() => {
-    const inField = gamePhase === 'Title' || gamePhase === 'CharacterSelect' || gamePhase === 'Map';
-    const inBattle = gamePhase === 'Battle' || gamePhase === 'Reward';
-
     if (fieldFadeIntervalRef.current !== null) clearInterval(fieldFadeIntervalRef.current);
     if (battleFadeIntervalRef.current !== null) clearInterval(battleFadeIntervalRef.current);
     fieldFadeIntervalRef.current = null;
@@ -167,11 +134,29 @@ export function App() {
       return;
     }
 
-    fieldAudio.play().catch(() => undefined);
-    battleAudio.play().catch(() => undefined);
-    fieldAudio.volume = inField ? bgmVolume : 0;
-    battleAudio.volume = inBattle ? bgmVolume : 0;
-  }, [bgmEnabled, bgmVolume, gamePhase, fieldAudio, battleAudio]);
+    const inField = gamePhase === 'Title' || gamePhase === 'CharacterSelect' || gamePhase === 'Map';
+    const inBattle = gamePhase === 'Battle' || gamePhase === 'Reward';
+
+    if (inField) {
+      battleAudio.pause();
+      battleAudio.currentTime = 0;
+      fieldAudio.play().catch(() => undefined);
+      runFade(fieldAudio, bgmVolume, fieldFadeIntervalRef);
+      return;
+    }
+
+    if (inBattle) {
+      fieldAudio.pause();
+      battleAudio.currentTime = 0;
+      battleAudio.volume = 0;
+      battleAudio.play().catch(() => undefined);
+      runFade(battleAudio, bgmVolume, battleFadeIntervalRef);
+      return;
+    }
+
+    fieldAudio.pause();
+    battleAudio.pause();
+  }, [gamePhase, bgmEnabled, bgmVolume, fieldAudio, battleAudio]);
 
   useEffect(() => () => {
     if (fieldFadeIntervalRef.current !== null) clearInterval(fieldFadeIntervalRef.current);
