@@ -367,7 +367,7 @@ body {
 }
 .card-illu-img {
   width: 86%;
-  height: 86%;
+  height: 65%;
   aspect-ratio: 455 / 825;
   object-fit: cover;
   position: absolute;
@@ -415,17 +415,29 @@ body {
 
 .card-category {
   position: absolute;
-  top: 18px;
-  right: 20px;
+  top: 22px;
+  z-index: 4;
   font-family: var(--font-display-en); font-weight: 700;
-  font-size: 8px; letter-spacing: .25em; color: var(--gold-soft);
-  display: none;
+  font-size: 9px;
+  letter-spacing: .25em;
+  color: var(--gold-soft);
 }
-.card-category.active { display: block; }
-.card-category.attack  { color: #d46a5a; }
-.card-category.defense { color: #6cbf7d; }
-.card-category.skill   { color: #7ab0e0; }
-.card-category.power   { color: #c084fc; }
+.card-category.attack  {
+  color: #ffb3a7;
+  right: 20px;
+}
+.card-category.defense {
+  color: #6cbf7d;
+  right: 18px;
+}
+.card-category.skill   {
+  color: #7ab0e0;
+  right: 26px;
+}
+.card-category.power   {
+  color: #c084fc;
+  right: 26px;
+}
 
 /* dark text panel — bottom 40% of card */
 .card-text-panel {
