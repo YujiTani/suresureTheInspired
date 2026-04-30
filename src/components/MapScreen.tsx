@@ -4,6 +4,10 @@ interface Props {
   runState: RunState;
   mapNodes: MapNode[];
   onEnterBattle: (node: MapNode) => void;
+  bgmEnabled: boolean;
+  bgmVolume: number;
+  onToggleBgm: () => void;
+  onChangeBgmVolume: (volume: number) => void;
 }
 
 const NODE_TYPE_LABEL: Record<string, string> = {
@@ -14,7 +18,7 @@ const NODE_TYPE_LABEL: Record<string, string> = {
   FinalBoss: '👹 最終ボス',
 };
 
-export function MapScreen({ runState, mapNodes, onEnterBattle }: Props) {
+export function MapScreen({ runState, mapNodes, onEnterBattle, bgmEnabled, bgmVolume, onToggleBgm, onChangeBgmVolume }: Props) {
   const { currentFloor, currentHp, player, gold } = runState;
   const nextNode = mapNodes.find(node => node.floor === currentFloor + 1) ?? null;
   const isCleared = currentFloor >= mapNodes[mapNodes.length - 1].floor;
@@ -23,6 +27,10 @@ export function MapScreen({ runState, mapNodes, onEnterBattle }: Props) {
     <div className="map-screen">
       <div className="map-header">
         <span className="map-title">MAP</span>
+        <div className="audio-control audio-control--map">
+          <button className="log-toggle-btn" onClick={onToggleBgm}>{bgmEnabled ? 'BGM ON' : 'BGM OFF'}</button>
+          <input type="range" min={0} max={100} value={Math.round(bgmVolume * 100)} onChange={e => onChangeBgmVolume(Number(e.target.value) / 100)} />
+        </div>
         <div className="map-player-status">
           <span>HP: {currentHp} / {player.maxHp}</span>
           <span>Gold: {gold}</span>

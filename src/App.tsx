@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Card, Player, GamePhase, MapNode, RunState } from './types';
 import { BattleScreen } from './components/BattleScreen';
 import { MapScreen } from './components/MapScreen';
@@ -14,6 +14,8 @@ import kunoichiImg from './assets/characters/kunoichi.png';
 import * as enemies from './data/enemies';
 import { MAP_NODES } from './data/mapData';
 import { getRewardCandidates } from './utils/rewardPool';
+import gardenBgm from './assets/audio/荊の庭.mp3';
+import battleBgm from './assets/audio/Scramble_Line.mp3';
 import './styles/battle.css';
 
 type CharaKey = 'princess' | 'kunoichi';
@@ -74,6 +76,67 @@ export function App() {
   const [runState, setRunState] = useState<RunState>(() => initRunState('princess'));
   const [currentNode, setCurrentNode] = useState<MapNode | null>(null);
   const [rewardCandidates, setRewardCandidates] = useState<Card[]>([]);
+  const [fieldBgmEnabled, setFieldBgmEnabled] = useState(false);
+  const [fieldBgmVolume, setFieldBgmVolume] = useState(0.6);
+  const [battleBgmEnabled, setBattleBgmEnabled] = useState(false);
+  const [battleBgmVolume, setBattleBgmVolume] = useState(0.6);
+  const fieldFadeIntervalRef = useRef<number | null>(null);
+  const battleFadeIntervalRef = useRef<number | null>(null);
+
+  const fieldAudio = useMemo(() => {
+    const audio = new Audio(gardenBgm);
+    audio.loop = true;
+    return audio;
+  }, []);
+  const battleAudio = useMemo(() => {
+    const audio = new Audio(battleBgm);
+    audio.loop = true;
+    return audio;
+  }, []);
+
+  function runFade(audio: HTMLAudioElement, targetVolume: number, fadeIntervalRef: React.MutableRefObject<number | null>) {
+    if (fadeIntervalRef.current !== null) {
+      clearInterval(fadeIntervalRef.current);
+    }
+    const startVolume = audio.volume;
+    const durationMs = 3000;
+    const stepMs = 50;
+    const steps = durationMs / stepMs;
+    let stepCount = 0;
+
+    fadeIntervalRef.current = window.setInterval(() => {
+      stepCount += 1;
+      const progress = Math.min(stepCount / steps, 1);
+      audio.volume = startVolume + (targetVolume - startVolume) * progress;
+      if (progress >= 1) {
+        if (fadeIntervalRef.current !== null) {
+          clearInterval(fadeIntervalRef.current);
+        }
+        fadeIntervalRef.current = null;
+      }
+    }, stepMs);
+  }
+
+  useEffect(() => {
+    const inField = gamePhase === 'Title' || gamePhase === 'CharacterSelect' || gamePhase === 'Map';
+    const inBattle = gamePhase === 'Battle' || gamePhase === 'Reward';
+
+    const nextFieldVolume = inField && fieldBgmEnabled ? fieldBgmVolume : 0;
+    const nextBattleVolume = inBattle && battleBgmEnabled ? battleBgmVolume : 0;
+
+    runFade(fieldAudio, nextFieldVolume, fieldFadeIntervalRef);
+    runFade(battleAudio, nextBattleVolume, battleFadeIntervalRef);
+
+    fieldAudio.play().catch(() => undefined);
+    battleAudio.play().catch(() => undefined);
+  }, [gamePhase, fieldBgmEnabled, fieldBgmVolume, battleBgmEnabled, battleBgmVolume, fieldAudio, battleAudio]);
+
+  useEffect(() => () => {
+    if (fieldFadeIntervalRef.current !== null) clearInterval(fieldFadeIntervalRef.current);
+    if (battleFadeIntervalRef.current !== null) clearInterval(battleFadeIntervalRef.current);
+    fieldAudio.pause();
+    battleAudio.pause();
+  }, [fieldAudio, battleAudio]);
 
   function handleConfirmChara(key: string) {
     const resolvedKey = key as CharaKey;
@@ -134,7 +197,7 @@ export function App() {
     : null;
 
   if (gamePhase === 'Title') {
-    return <TitleScreen onStart={() => setGamePhase('CharacterSelect')} />;
+    return <TitleScreen onStart={() => setGamePhase('CharacterSelect')} bgmEnabled={fieldBgmEnabled} bgmVolume={fieldBgmVolume} onToggleBgm={() => setFieldBgmEnabled(v => !v)} onChangeBgmVolume={setFieldBgmVolume} />;
   }
 
   if (gamePhase === 'CharacterSelect') {
@@ -144,6 +207,10 @@ export function App() {
         initialSelected={charaKey}
         onConfirm={handleConfirmChara}
         onBack={() => setGamePhase('Title')}
+        bgmEnabled={fieldBgmEnabled}
+        bgmVolume={fieldBgmVolume}
+        onToggleBgm={() => setFieldBgmEnabled(v => !v)}
+        onChangeBgmVolume={setFieldBgmVolume}
       />
     );
   }
@@ -154,6 +221,10 @@ export function App() {
         runState={runState}
         mapNodes={MAP_NODES}
         onEnterBattle={handleEnterBattle}
+        bgmEnabled={fieldBgmEnabled}
+        bgmVolume={fieldBgmVolume}
+        onToggleBgm={() => setFieldBgmEnabled(v => !v)}
+        onChangeBgmVolume={setFieldBgmVolume}
       />
     );
   }
@@ -168,6 +239,10 @@ export function App() {
         startHp={runState.currentHp}
         onVictory={handleVictory}
         onDefeat={handleDefeat}
+        bgmEnabled={battleBgmEnabled}
+        bgmVolume={battleBgmVolume}
+        onToggleBgm={() => setBattleBgmEnabled(v => !v)}
+        onChangeBgmVolume={setBattleBgmVolume}
       />
     );
   }

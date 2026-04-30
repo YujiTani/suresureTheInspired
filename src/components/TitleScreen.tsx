@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import titleBg from '../assets/backgrounds/title-bg.png';
 
 const EMBER_COLORS = [
@@ -40,12 +40,14 @@ function generateEmbers(count: number): EmberParticle[] {
 
 interface TitleScreenProps {
   onStart: () => void;
+  bgmEnabled: boolean;
+  bgmVolume: number;
+  onToggleBgm: () => void;
+  onChangeBgmVolume: (volume: number) => void;
 }
 
-export function TitleScreen({ onStart }: TitleScreenProps) {
+export function TitleScreen({ onStart, bgmEnabled, bgmVolume, onToggleBgm, onChangeBgmVolume }: TitleScreenProps) {
   const embers = useMemo(() => generateEmbers(100), []);
-  // ゲームBGMのon・off を行う
-  const [isBgmOn, setIsBgmOn] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -54,24 +56,11 @@ export function TitleScreen({ onStart }: TitleScreenProps) {
       }
     }
     addEventListener('keydown', handleKeyDown);
-    setIsBgmOn(true); // タイトル画面でBGMをオンにする
 
     return () => {
       removeEventListener('keydown', handleKeyDown);
-      setIsBgmOn(false); // タイトル画面を離れるときにBGMをオフにする
     }
   }, [onStart]);
-
-  useEffect(() => {
-    const audio = new Audio('/assets/audio/荊の庭.mp3');
-    audio.loop = true;
-
-    if (isBgmOn) {
-      audio.play();
-    } else {
-      audio.pause();
-    }
-  }, [isBgmOn]);
 
   return (
     <div className="title-screen">
@@ -100,7 +89,16 @@ export function TitleScreen({ onStart }: TitleScreenProps) {
         <button className="title-start-btn" onClick={onStart}>
           GAME START
         </button>
-        <button className="bgm-toggle-btn" onClick={() => setIsBgmOn(prev => !prev)}>♪</button>
+        <div className="audio-control audio-control--title">
+          <button className="log-toggle-btn" onClick={onToggleBgm}>{bgmEnabled ? 'BGM ON' : 'BGM OFF'}</button>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={Math.round(bgmVolume * 100)}
+            onChange={e => onChangeBgmVolume(Number(e.target.value) / 100)}
+          />
+        </div>
       </div>
     </div >
   );
