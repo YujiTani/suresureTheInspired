@@ -76,21 +76,21 @@ export function App() {
   const [runState, setRunState] = useState<RunState>(() => initRunState('princess'));
   const [currentNode, setCurrentNode] = useState<MapNode | null>(null);
   const [rewardCandidates, setRewardCandidates] = useState<Card[]>([]);
-  const [fieldBgmEnabled, setFieldBgmEnabled] = useState(false);
-  const [fieldBgmVolume, setFieldBgmVolume] = useState(0.6);
-  const [battleBgmEnabled, setBattleBgmEnabled] = useState(false);
-  const [battleBgmVolume, setBattleBgmVolume] = useState(0.6);
+  const [bgmEnabled, setBgmEnabled] = useState(false);
+  const [bgmVolume, setBgmVolume] = useState(0.3);
   const fieldFadeIntervalRef = useRef<number | null>(null);
   const battleFadeIntervalRef = useRef<number | null>(null);
 
   const fieldAudio = useMemo(() => {
     const audio = new Audio(gardenBgm);
     audio.loop = true;
+    audio.volume = 0;
     return audio;
   }, []);
   const battleAudio = useMemo(() => {
     const audio = new Audio(battleBgm);
     audio.loop = true;
+    audio.volume = 0;
     return audio;
   }, []);
 
@@ -118,18 +118,42 @@ export function App() {
   }
 
   useEffect(() => {
+    if (fieldFadeIntervalRef.current !== null) clearInterval(fieldFadeIntervalRef.current);
+    if (battleFadeIntervalRef.current !== null) clearInterval(battleFadeIntervalRef.current);
+    fieldFadeIntervalRef.current = null;
+    battleFadeIntervalRef.current = null;
+
+    if (!bgmEnabled) {
+      fieldAudio.volume = 0;
+      battleAudio.volume = 0;
+      fieldAudio.pause();
+      battleAudio.pause();
+      return;
+    }
+
     const inField = gamePhase === 'Title' || gamePhase === 'CharacterSelect' || gamePhase === 'Map';
     const inBattle = gamePhase === 'Battle' || gamePhase === 'Reward';
 
-    const nextFieldVolume = inField && fieldBgmEnabled ? fieldBgmVolume : 0;
-    const nextBattleVolume = inBattle && battleBgmEnabled ? battleBgmVolume : 0;
+    if (inField) {
+      battleAudio.pause();
+      battleAudio.currentTime = 0;
+      fieldAudio.play().catch(() => undefined);
+      runFade(fieldAudio, bgmVolume, fieldFadeIntervalRef);
+      return;
+    }
 
-    runFade(fieldAudio, nextFieldVolume, fieldFadeIntervalRef);
-    runFade(battleAudio, nextBattleVolume, battleFadeIntervalRef);
+    if (inBattle) {
+      fieldAudio.pause();
+      battleAudio.currentTime = 0;
+      battleAudio.volume = 0;
+      battleAudio.play().catch(() => undefined);
+      runFade(battleAudio, bgmVolume, battleFadeIntervalRef);
+      return;
+    }
 
-    fieldAudio.play().catch(() => undefined);
-    battleAudio.play().catch(() => undefined);
-  }, [gamePhase, fieldBgmEnabled, fieldBgmVolume, battleBgmEnabled, battleBgmVolume, fieldAudio, battleAudio]);
+    fieldAudio.pause();
+    battleAudio.pause();
+  }, [gamePhase, bgmEnabled, bgmVolume, fieldAudio, battleAudio]);
 
   useEffect(() => () => {
     if (fieldFadeIntervalRef.current !== null) clearInterval(fieldFadeIntervalRef.current);
@@ -197,7 +221,7 @@ export function App() {
     : null;
 
   if (gamePhase === 'Title') {
-    return <TitleScreen onStart={() => setGamePhase('CharacterSelect')} bgmEnabled={fieldBgmEnabled} bgmVolume={fieldBgmVolume} onToggleBgm={() => setFieldBgmEnabled(v => !v)} onChangeBgmVolume={setFieldBgmVolume} />;
+    return <TitleScreen onStart={() => setGamePhase('CharacterSelect')} bgmEnabled={bgmEnabled} bgmVolume={bgmVolume} onToggleBgm={() => setBgmEnabled(v => !v)} onChangeBgmVolume={setBgmVolume} />;
   }
 
   if (gamePhase === 'CharacterSelect') {
@@ -207,10 +231,10 @@ export function App() {
         initialSelected={charaKey}
         onConfirm={handleConfirmChara}
         onBack={() => setGamePhase('Title')}
-        bgmEnabled={fieldBgmEnabled}
-        bgmVolume={fieldBgmVolume}
-        onToggleBgm={() => setFieldBgmEnabled(v => !v)}
-        onChangeBgmVolume={setFieldBgmVolume}
+        bgmEnabled={bgmEnabled}
+        bgmVolume={bgmVolume}
+        onToggleBgm={() => setBgmEnabled(v => !v)}
+        onChangeBgmVolume={setBgmVolume}
       />
     );
   }
@@ -221,10 +245,10 @@ export function App() {
         runState={runState}
         mapNodes={MAP_NODES}
         onEnterBattle={handleEnterBattle}
-        bgmEnabled={fieldBgmEnabled}
-        bgmVolume={fieldBgmVolume}
-        onToggleBgm={() => setFieldBgmEnabled(v => !v)}
-        onChangeBgmVolume={setFieldBgmVolume}
+        bgmEnabled={bgmEnabled}
+        bgmVolume={bgmVolume}
+        onToggleBgm={() => setBgmEnabled(v => !v)}
+        onChangeBgmVolume={setBgmVolume}
       />
     );
   }
@@ -239,10 +263,10 @@ export function App() {
         startHp={runState.currentHp}
         onVictory={handleVictory}
         onDefeat={handleDefeat}
-        bgmEnabled={battleBgmEnabled}
-        bgmVolume={battleBgmVolume}
-        onToggleBgm={() => setBattleBgmEnabled(v => !v)}
-        onChangeBgmVolume={setBattleBgmVolume}
+        bgmEnabled={bgmEnabled}
+        bgmVolume={bgmVolume}
+        onToggleBgm={() => setBgmEnabled(v => !v)}
+        onChangeBgmVolume={setBgmVolume}
       />
     );
   }
