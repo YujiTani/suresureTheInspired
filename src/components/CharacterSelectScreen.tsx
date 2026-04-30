@@ -68,6 +68,10 @@ interface CharacterSelectScreenProps {
   initialSelected: string;
   onConfirm: (key: string) => void;
   onBack: () => void;
+  bgmEnabled: boolean;
+  bgmVolume: number;
+  onToggleBgm: () => void;
+  onChangeBgmVolume: (volume: number) => void;
 }
 
 export function CharacterSelectScreen({
@@ -75,6 +79,10 @@ export function CharacterSelectScreen({
   initialSelected,
   onConfirm,
   onBack,
+  bgmEnabled,
+  bgmVolume,
+  onToggleBgm,
+  onChangeBgmVolume,
 }: CharacterSelectScreenProps) {
   const [selected, setSelected] = useState(initialSelected);
   const embers = useMemo(() => generateEmbers(80), []);
@@ -113,6 +121,10 @@ export function CharacterSelectScreen({
   return (
     <div className="cs-screen">
       <button className="cs-back-btn" onClick={onBack}>← BACK</button>
+      <div className="audio-control">
+        <button className="log-toggle-btn" onClick={onToggleBgm}>{bgmEnabled ? 'BGM ON' : 'BGM OFF'}</button>
+        <input type="range" min={0} max={100} value={Math.round(bgmVolume * 100)} onChange={e => onChangeBgmVolume(Number(e.target.value) / 100)} />
+      </div>
       <div className="cs-embers">
         {embers.map(ember => (
           <div

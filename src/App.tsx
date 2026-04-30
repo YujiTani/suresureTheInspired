@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Card, Player, GamePhase, MapNode, RunState } from './types';
 import { BattleScreen } from './components/BattleScreen';
 import { MapScreen } from './components/MapScreen';
@@ -14,6 +14,8 @@ import kunoichiImg from './assets/characters/kunoichi.png';
 import * as enemies from './data/enemies';
 import { MAP_NODES } from './data/mapData';
 import { getRewardCandidates } from './utils/rewardPool';
+import gardenBgm from './assets/audio/荊の庭.mp3';
+import battleBgm from './assets/audio/Scramble_Line.mp3';
 import './styles/battle.css';
 
 type CharaKey = 'princess' | 'kunoichi';
@@ -74,6 +76,37 @@ export function App() {
   const [runState, setRunState] = useState<RunState>(() => initRunState('princess'));
   const [currentNode, setCurrentNode] = useState<MapNode | null>(null);
   const [rewardCandidates, setRewardCandidates] = useState<Card[]>([]);
+  const [fieldBgmEnabled, setFieldBgmEnabled] = useState(false);
+  const [fieldBgmVolume, setFieldBgmVolume] = useState(0.6);
+  const [battleBgmEnabled, setBattleBgmEnabled] = useState(false);
+  const [battleBgmVolume, setBattleBgmVolume] = useState(0.6);
+
+  const fieldAudio = useMemo(() => {
+    const audio = new Audio(gardenBgm);
+    audio.loop = true;
+    return audio;
+  }, []);
+  const battleAudio = useMemo(() => {
+    const audio = new Audio(battleBgm);
+    audio.loop = true;
+    return audio;
+  }, []);
+
+  useEffect(() => {
+    const inField = gamePhase === 'Title' || gamePhase === 'CharacterSelect' || gamePhase === 'Map';
+    const inBattle = gamePhase === 'Battle';
+
+    fieldAudio.volume = inField && fieldBgmEnabled ? fieldBgmVolume : 0;
+    battleAudio.volume = inBattle && battleBgmEnabled ? battleBgmVolume : 0;
+
+    fieldAudio.play().catch(() => undefined);
+    battleAudio.play().catch(() => undefined);
+  }, [gamePhase, fieldBgmEnabled, fieldBgmVolume, battleBgmEnabled, battleBgmVolume, fieldAudio, battleAudio]);
+
+  useEffect(() => () => {
+    fieldAudio.pause();
+    battleAudio.pause();
+  }, [fieldAudio, battleAudio]);
 
   function handleConfirmChara(key: string) {
     const resolvedKey = key as CharaKey;
@@ -134,7 +167,7 @@ export function App() {
     : null;
 
   if (gamePhase === 'Title') {
-    return <TitleScreen onStart={() => setGamePhase('CharacterSelect')} />;
+    return <TitleScreen onStart={() => setGamePhase('CharacterSelect')} bgmEnabled={fieldBgmEnabled} bgmVolume={fieldBgmVolume} onToggleBgm={() => setFieldBgmEnabled(v => !v)} onChangeBgmVolume={setFieldBgmVolume} />;
   }
 
   if (gamePhase === 'CharacterSelect') {
@@ -144,6 +177,10 @@ export function App() {
         initialSelected={charaKey}
         onConfirm={handleConfirmChara}
         onBack={() => setGamePhase('Title')}
+        bgmEnabled={fieldBgmEnabled}
+        bgmVolume={fieldBgmVolume}
+        onToggleBgm={() => setFieldBgmEnabled(v => !v)}
+        onChangeBgmVolume={setFieldBgmVolume}
       />
     );
   }
@@ -154,6 +191,10 @@ export function App() {
         runState={runState}
         mapNodes={MAP_NODES}
         onEnterBattle={handleEnterBattle}
+        bgmEnabled={fieldBgmEnabled}
+        bgmVolume={fieldBgmVolume}
+        onToggleBgm={() => setFieldBgmEnabled(v => !v)}
+        onChangeBgmVolume={setFieldBgmVolume}
       />
     );
   }
@@ -168,6 +209,10 @@ export function App() {
         startHp={runState.currentHp}
         onVictory={handleVictory}
         onDefeat={handleDefeat}
+        bgmEnabled={battleBgmEnabled}
+        bgmVolume={battleBgmVolume}
+        onToggleBgm={() => setBattleBgmEnabled(v => !v)}
+        onChangeBgmVolume={setBattleBgmVolume}
       />
     );
   }

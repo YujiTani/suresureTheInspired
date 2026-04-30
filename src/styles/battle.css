@@ -585,6 +585,29 @@ body {
 }
 .log-toggle-btn:hover { color: var(--gold-soft); border-color: var(--gold-deep); }
 
+.audio-control {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.audio-control input[type='range'] {
+  width: 92px;
+}
+
+.audio-control--title {
+  position: static;
+}
+
+.audio-control--map {
+  position: static;
+  margin-left: auto;
+}
+
 /* ─── Log Panel ─── */
 .log-panel {
   position: absolute; right: 12px; top: 48px; bottom: 160px;

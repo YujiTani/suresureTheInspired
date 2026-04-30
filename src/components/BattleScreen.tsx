@@ -18,9 +18,13 @@ interface Props {
   startHp?: number;
   onVictory?: (remainingHp: number) => void;
   onDefeat?: () => void;
+  bgmEnabled: boolean;
+  bgmVolume: number;
+  onToggleBgm: () => void;
+  onChangeBgmVolume: (volume: number) => void;
 }
 
-export function BattleScreen({ player, deck, enemies, startHp, onVictory, onDefeat }: Props) {
+export function BattleScreen({ player, deck, enemies, startHp, onVictory, onDefeat, bgmEnabled, bgmVolume, onToggleBgm, onChangeBgmVolume }: Props) {
   const [state, setState] = useState<BattleState>(() => {
     const initial = initBattle(player, deck, enemies);
     if (startHp !== undefined && startHp <= 0) {
@@ -153,6 +157,8 @@ export function BattleScreen({ player, deck, enemies, startHp, onVictory, onDefe
         <span style={{ fontFamily: 'Cinzel, serif', fontSize: 10, color: '#6e6880', letterSpacing: '.3em' }}>
           TURN {turn}
         </span>
+        <button className="log-toggle-btn" onClick={onToggleBgm}>{bgmEnabled ? 'BGM ON' : 'BGM OFF'}</button>
+        <input type="range" min={0} max={100} value={Math.round(bgmVolume * 100)} onChange={e => onChangeBgmVolume(Number(e.target.value) / 100)} />
       </div>
 
       {pendingHandIndex !== null && (
