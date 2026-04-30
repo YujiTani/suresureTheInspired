@@ -15,7 +15,9 @@ import * as enemies from './data/enemies';
 import { MAP_NODES } from './data/mapData';
 import { getRewardCandidates } from './utils/rewardPool';
 import gardenBgm from './assets/audio/荊の庭.mp3';
+import gardenBgm2 from './assets/audio/Erica.mp3'
 import battleBgm from './assets/audio/Scramble_Line.mp3';
+import battleBgm2 from './assets/audio/Thunderbolt.mp3';
 import './styles/battle.css';
 
 type CharaKey = 'princess' | 'kunoichi';
@@ -82,13 +84,14 @@ export function App() {
   const battleFadeIntervalRef = useRef<number | null>(null);
 
   const fieldAudio = useMemo(() => {
-    const audio = new Audio(gardenBgm);
+    const audios = [gardenBgm, gardenBgm2];
+    const audio = new Audio(Math.random() < 0.5 ? audios[0] : audios[1]);
     audio.loop = true;
     audio.volume = 0;
     return audio;
   }, []);
   const battleAudio = useMemo(() => {
-    const audio = new Audio(battleBgm);
+    const audio = new Audio(battleBgm2);
     audio.loop = true;
     audio.volume = 0;
     return audio;
