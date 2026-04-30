@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Card, Player, GamePhase, MapNode, RunState } from './types';
 import { BattleScreen } from './components/BattleScreen';
 import { MapScreen } from './components/MapScreen';
@@ -80,6 +80,8 @@ export function App() {
   const [fieldBgmVolume, setFieldBgmVolume] = useState(0.6);
   const [battleBgmEnabled, setBattleBgmEnabled] = useState(false);
   const [battleBgmVolume, setBattleBgmVolume] = useState(0.6);
+  const fieldFadeIntervalRef = useRef<number | null>(null);
+  const battleFadeIntervalRef = useRef<number | null>(null);
 
   const fieldAudio = useMemo(() => {
     const audio = new Audio(gardenBgm);
@@ -92,18 +94,46 @@ export function App() {
     return audio;
   }, []);
 
+  function runFade(audio: HTMLAudioElement, targetVolume: number, fadeIntervalRef: React.MutableRefObject<number | null>) {
+    if (fadeIntervalRef.current !== null) {
+      clearInterval(fadeIntervalRef.current);
+    }
+    const startVolume = audio.volume;
+    const durationMs = 3000;
+    const stepMs = 50;
+    const steps = durationMs / stepMs;
+    let stepCount = 0;
+
+    fadeIntervalRef.current = window.setInterval(() => {
+      stepCount += 1;
+      const progress = Math.min(stepCount / steps, 1);
+      audio.volume = startVolume + (targetVolume - startVolume) * progress;
+      if (progress >= 1) {
+        if (fadeIntervalRef.current !== null) {
+          clearInterval(fadeIntervalRef.current);
+        }
+        fadeIntervalRef.current = null;
+      }
+    }, stepMs);
+  }
+
   useEffect(() => {
     const inField = gamePhase === 'Title' || gamePhase === 'CharacterSelect' || gamePhase === 'Map';
-    const inBattle = gamePhase === 'Battle';
+    const inBattle = gamePhase === 'Battle' || gamePhase === 'Reward';
 
-    fieldAudio.volume = inField && fieldBgmEnabled ? fieldBgmVolume : 0;
-    battleAudio.volume = inBattle && battleBgmEnabled ? battleBgmVolume : 0;
+    const nextFieldVolume = inField && fieldBgmEnabled ? fieldBgmVolume : 0;
+    const nextBattleVolume = inBattle && battleBgmEnabled ? battleBgmVolume : 0;
+
+    runFade(fieldAudio, nextFieldVolume, fieldFadeIntervalRef);
+    runFade(battleAudio, nextBattleVolume, battleFadeIntervalRef);
 
     fieldAudio.play().catch(() => undefined);
     battleAudio.play().catch(() => undefined);
   }, [gamePhase, fieldBgmEnabled, fieldBgmVolume, battleBgmEnabled, battleBgmVolume, fieldAudio, battleAudio]);
 
   useEffect(() => () => {
+    if (fieldFadeIntervalRef.current !== null) clearInterval(fieldFadeIntervalRef.current);
+    if (battleFadeIntervalRef.current !== null) clearInterval(battleFadeIntervalRef.current);
     fieldAudio.pause();
     battleAudio.pause();
   }, [fieldAudio, battleAudio]);
