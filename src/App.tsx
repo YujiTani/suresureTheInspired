@@ -86,11 +86,13 @@ export function App() {
   const fieldAudio = useMemo(() => {
     const audio = new Audio(gardenBgm);
     audio.loop = true;
+    audio.volume = 0;
     return audio;
   }, []);
   const battleAudio = useMemo(() => {
     const audio = new Audio(battleBgm);
     audio.loop = true;
+    audio.volume = 0;
     return audio;
   }, []);
 
