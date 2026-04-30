@@ -1,4 +1,10 @@
 import type { Card } from '../types';
+import { resolveCardArt } from './resolveCardArt';
+
+const princessCardArtModules = import.meta.glob('../assets/cards/princess/*.{png,jpg,jpeg,webp,avif}', {
+  eager: true,
+  import: 'default',
+}) as Record<string, string>;
 
 // --- Attack Cards ---
 
@@ -296,6 +302,7 @@ export const princessCards: Card[] = [
   P020Card,
 ].map((card) => ({
   ...card,
+  img: resolveCardArt(princessCardArtModules, card.id),
   cardArtPosition: null,
 }));
 
