@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BattleScreen.tsx 構造図解</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b22;
+    --bg3: #1e2431;
+    --bg4: #252d3d;
+    --border: #2d3748;
+    --text: #e2e8f0;
+    --text-muted: #718096;
+    --text-dim: #4a5568;
+
+    --state-bg: #1a2744;
+    --state-border: #3b82f6;
+    --state-text: #93c5fd;
+    --state-header: #1e3a5f;
+
+    --props-bg: #1a3322;
+    --props-border: #22c55e;
+    --props-text: #86efac;
+    --props-header: #14532d;
+
+    --cb-bg: #2d1a0e;
+    --cb-border: #f97316;
+    --cb-text: #fed7aa;
+    --cb-header: #431407;
+
+    --ext-bg: #1e1a2e;
+    --ext-border: #a855f7;
+    --ext-text: #d8b4fe;
+    --ext-header: #2e1065;
+
+    --comp-bg: #1a1f2e;
+    --comp-border: #6366f1;
+    --comp-text: #c7d2fe;
+
+    --warn-bg: #2d2215;
+    --warn-border: #eab308;
+    --warn-text: #fde68a;
+
+    --flow-arrow: #475569;
+    --section-radius: 12px;
+    --card-radius: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    background: linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+
+  .page-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #e2e8f0;
+    letter-spacing: 0.05em;
+  }
+
+  .page-header .meta {
+    display: flex;
+    gap: 20px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  .badge-file { background: #1e2431; border: 1px solid var(--comp-border); color: var(--comp-text); }
+  .badge-lines { background: #1a2744; border: 1px solid var(--state-border); color: var(--state-text); }
+  .badge-react { background: #1a3322; border: 1px solid var(--props-border); color: var(--props-text); }
+
+  .toc {
+    display: flex;
+    gap: 8px;
+    padding: 12px 40px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .toc a {
+    padding: 4px 12px;
+    border-radius: 6px;
+    background: var(--bg3);
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+
+  .toc a:hover { background: var(--bg4); color: var(--text); border-color: #4a5568; }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 32px 40px; }
+
+  /* ─── Section ─── */
+  .section {
+    margin-bottom: 40px;
+    border-radius: var(--section-radius);
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    overflow: hidden;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: var(--bg3);
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  .section-header:hover { background: var(--bg4); }
+
+  .section-header h2 {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    flex: 1;
+  }
+
+  .section-num {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800;
+    background: var(--bg4);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .toggle-icon {
+    font-size: 10px;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+  }
+
+  .section-body { padding: 24px 20px; }
+  .collapsed .section-body { display: none; }
+  .collapsed .toggle-icon { transform: rotate(-90deg); }
+
+  /* ─── Component Tree ─── */
+  .comp-tree {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .root-node {
+    background: linear-gradient(135deg, #1e2a4a, #1a2040);
+    border: 2px solid var(--comp-border);
+    border-radius: 12px;
+    padding: 16px 28px;
+    text-align: center;
+    min-width: 280px;
+    position: relative;
+  }
+
+  .root-node .comp-name {
+    font-size: 18px;
+    font-weight: 800;
+    color: #a5b4fc;
+    letter-spacing: 0.05em;
+  }
+
+  .root-node .comp-file {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+
+  .root-node .comp-lines {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .root-tag {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .tag-react { background: #1e3a5f; color: #93c5fd; }
+  .tag-state { background: #1a3322; color: #86efac; }
+  .tag-async { background: #2d1a0e; color: #fed7aa; }
+
+  .tree-connector-down {
+    width: 2px;
+    height: 28px;
+    background: var(--flow-arrow);
+    position: relative;
+  }
+
+  .tree-connector-down::after {
+    content: '▼';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 8px;
+    color: var(--flow-arrow);
+  }
+
+  .child-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .child-node {
+    background: var(--comp-bg);
+    border: 1px solid var(--comp-border);
+    border-radius: var(--card-radius);
+    padding: 12px 14px;
+    transition: all 0.15s;
+  }
+
+  .child-node:hover {
+    border-color: #818cf8;
+    background: #1e2438;
+    transform: translateY(-1px);
+  }
+
+  .child-node .comp-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--comp-text);
+  }
+
+  .child-node .comp-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  .child-node .comp-props {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .prop-item {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: flex;
+    gap: 6px;
+  }
+
+  .prop-item.is-prop { background: var(--props-bg); color: var(--props-text); }
+  .prop-item.is-cb { background: var(--cb-bg); color: var(--cb-text); }
+  .prop-item .prop-label { color: var(--text-muted); flex-shrink: 0; }
+
+  /* ─── State Table ─── */
+  .state-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .state-card {
+    background: var(--state-bg);
+    border: 1px solid var(--state-border);
+    border-radius: var(--card-radius);
+    padding: 14px;
+    transition: all 0.15s;
+  }
+
+  .state-card:hover { border-color: #60a5fa; }
+
+  .state-card.is-ref {
+    background: #1a1a2e;
+    border-color: #6366f1;
+  }
+
+  .state-card .var-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--state-text);
+    font-family: monospace;
+  }
+
+  .state-card.is-ref .var-name { color: #c7d2fe; }
+
+  .state-card .var-type {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: monospace;
+    margin-top: 2px;
+  }
+
+  .state-card .var-init {
+    font-size: 10px;
+    color: var(--cb-text);
+    font-family: monospace;
+    margin-top: 3px;
+    opacity: 0.8;
+  }
+
+  .state-card .var-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  .state-card .var-used-by {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .used-tag {
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var(--state-header);
+    color: var(--state-text);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+
+  /* ─── Flow Charts ─── */
+  .flow-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+  }
+
+  .flow-chart {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    padding: 16px;
+  }
+
+  .flow-chart h3 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    font-family: monospace;
+    letter-spacing: 0.03em;
+  }
+
+  .flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .flow-node {
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 5px;
+    font-size: 10px;
+    line-height: 1.4;
+    position: relative;
+  }
+
+  .flow-node.start { background: #14532d; border: 1px solid #22c55e; color: #86efac; }
+  .flow-node.check { background: #2d2215; border: 1px solid #eab308; color: #fde68a; }
+  .flow-node.action { background: #1a2744; border: 1px solid #3b82f6; color: #93c5fd; }
+  .flow-node.branch { background: #1e1a2e; border: 1px solid #a855f7; color: #d8b4fe; }
+  .flow-node.end-ok { background: #14532d; border: 1px solid #22c55e; color: #86efac; }
+  .flow-node.end-bad { background: #2d1414; border: 1px solid #ef4444; color: #fca5a5; }
+  .flow-node.wait { background: #2d1a0e; border: 1px solid #f97316; color: #fed7aa; }
+
+  .flow-arrow-down {
+    width: 1px;
+    min-height: 16px;
+    background: var(--flow-arrow);
+    margin: 0 auto;
+    position: relative;
+    align-self: center;
+  }
+
+  .flow-arrow-down::after {
+    content: '▼';
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 7px;
+    color: var(--flow-arrow);
+  }
+
+  .flow-branch-wrapper {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .flow-branch-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .flow-branch-label {
+    font-size: 9px;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 1px 4px;
+    background: var(--bg4);
+    border-radius: 3px;
+  }
+
+  /* ─── Data Flow ─── */
+  .dataflow-wrapper {
+    display: grid;
+    grid-template-columns: 200px 1fr 200px;
+    gap: 0;
+    align-items: stretch;
+    min-height: 300px;
+  }
+
+  .dataflow-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 10px;
+  }
+
+  .dataflow-col.left { padding-left: 0; }
+  .dataflow-col.right { padding-right: 0; }
+
+  .dataflow-node {
+    padding: 10px 12px;
+    border-radius: var(--card-radius);
+    border: 1px solid var(--border);
+    background: var(--bg3);
+  }
+
+  .dataflow-node .node-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text);
+    font-family: monospace;
+  }
+
+  .dataflow-node .node-detail {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+
+  .dataflow-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #1e2a4a, #1a2040);
+    border: 2px solid var(--comp-border);
+    border-radius: 12px;
+    text-align: center;
+    position: relative;
+  }
+
+  .dataflow-center .center-name {
+    font-size: 16px;
+    font-weight: 800;
+    color: #a5b4fc;
+    letter-spacing: 0.05em;
+  }
+
+  .dataflow-center .center-role {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .arrow-connector {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    padding: 3px 0;
+    color: var(--text-muted);
+  }
+
+  .arrow-connector .arrow-line {
+    flex: 1;
+    height: 1px;
+    background: var(--flow-arrow);
+  }
+
+  .arrow-connector .arrow-label {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .arrow-connector.is-props .arrow-label { background: var(--props-bg); color: var(--props-text); }
+  .arrow-connector.is-cb .arrow-label { background: var(--cb-bg); color: var(--cb-text); }
+
+  /* ─── External Deps ─── */
+  .ext-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .ext-card {
+    background: var(--ext-bg);
+    border: 1px solid var(--ext-border);
+    border-radius: var(--card-radius);
+    padding: 14px;
+    transition: all 0.15s;
+  }
+
+  .ext-card:hover { border-color: #c084fc; }
+
+  .ext-card .ext-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ext-text);
+    font-family: monospace;
+  }
+
+  .ext-card .ext-path {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .ext-card .ext-fns {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .fn-tag {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--ext-header);
+    color: var(--ext-text);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    font-family: monospace;
+  }
+
+  .fn-tag.special { background: var(--warn-bg); color: var(--warn-text); border-color: rgba(234, 179, 8, 0.3); }
+
+  /* ─── Special Paths ─── */
+  .special-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .special-card {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    border-radius: var(--card-radius);
+    padding: 14px;
+  }
+
+  .special-card .sp-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--warn-text);
+    font-family: monospace;
+  }
+
+  .special-card .sp-cards {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .card-id {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #1a2744;
+    color: #93c5fd;
+    border: 1px solid var(--state-border);
+    font-family: monospace;
+  }
+
+  .special-card .sp-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+
+  /* ─── Legend ─── */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    background: var(--bg3);
+    border-radius: var(--card-radius);
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ─── Scroll to top ─── */
+  #top-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    z-index: 200;
+  }
+
+  #top-btn:hover { background: var(--bg4); color: var(--text); }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 900px) {
+    .child-grid { grid-template-columns: repeat(2, 1fr); }
+    .flow-container { grid-template-columns: 1fr; }
+    .state-grid { grid-template-columns: 1fr; }
+    .ext-grid { grid-template-columns: 1fr; }
+    .dataflow-wrapper { grid-template-columns: 1fr; }
+    .container { padding: 20px 16px; }
+    .toc, .page-header { padding-left: 16px; padding-right: 16px; }
+  }
+
+  @media (max-width: 600px) {
+    .child-grid { grid-template-columns: 1fr; }
+    .special-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>BattleScreen.tsx — 構造図解</h1>
+  <div class="meta">
+    <span class="badge badge-file">📄 src/components/BattleScreen.tsx</span>
+    <span class="badge badge-lines">252 lines</span>
+    <span class="badge badge-react">React Functional Component</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#sec-tree">1. コンポーネントツリー</a>
+  <a href="#sec-state">2. State管理</a>
+  <a href="#sec-flow">3. イベントフロー</a>
+  <a href="#sec-dataflow">4. データフロー</a>
+  <a href="#sec-ext">5. 外部依存</a>
+  <a href="#sec-special">6. 特殊カードパス</a>
+</nav>
+
+<div class="container">
+
+  <!-- ── Section 1: Component Tree ── -->
+  <section class="section" id="sec-tree">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-num">1</div>
+      <h2>コンポーネントツリー</h2>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body">
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#6366f1"></div>Reactコンポーネント</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>Props（下向き）</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>Callbacks（上向き）</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#eab308"></div>条件付きレンダリング</div>
+      </div>
+      <div class="comp-tree">
+        <div class="root-node">
+          <div class="comp-name">BattleScreen</div>
+          <div class="comp-file">src/components/BattleScreen.tsx : 1-252</div>
+          <div class="comp-lines">
+            <span class="root-tag tag-react">useState × 7</span>
+            <span class="root-tag tag-state">useRef × 1</span>
+            <span class="root-tag tag-async">async handlers × 2</span>
+          </div>
+        </div>
+
+        <div class="tree-connector-down" style="height:32px;margin-top:4px;"></div>
+
+        <div class="child-grid">
+
+          <div class="child-node">
+            <div class="comp-name">&lt;EnemyArea /&gt;</div>
+            <div class="comp-desc">敵キャラ表示 + ダメージフロート数値 (FloatItem[])</div>
+            <div class="comp-props">
+              <div class="prop-item is-prop"><span class="prop-label">prop</span> enemies: EnemyBattleState[]</div>
+              <div class="prop-item is-prop"><span class="prop-label">prop</span> floats: FloatItem[]</div>
+              <div class="prop-item is-prop"><span class="prop-label">prop</span> phase: TurnPhase</div>
+            </div>
+          </div>
+
+          <div class="child-node">
+            <div class="comp-name">&lt;PlayerBar /&gt;</div>
+            <div class="comp-desc">プレイヤーHP・シールド・ステータスエフェクト表示</div>
+            <div class="comp-props">
+              <div class="prop-item is-prop"><span class="prop-label">prop</span> playerState: PlayerBattleState</div>
+              <div class="prop-item is-prop"><span class="prop-label">prop</span> player: Player</div>
+            </div>
+          </div>
+
+          <div class="child-node">
+            <div class="comp-name">&lt;CardArea /&gt;</div>
+            <div class="comp-desc">手札・デッキ・捨て札・エネルギー・ターン終了ボタン</div>
+            <div class="comp-props">
+              <div class="prop-item is-prop"><span class="prop-label">prop</span> playerState: PlayerBattleState</div>
+              <div class="prop-item is-prop"><span class="prop-label">prop</span> phase: TurnPhase</div>
+              <div class="prop-item is-prop"><span class="prop-label">prop</span> isAnimating: boolean</div>
+              <div class="prop-item is-cb"><span class="prop-label">↑ cb</span> onCardClick(i: number)</div>
+              <div class="prop-item is-cb"><span class="prop-label">↑ cb</span> onEndTurn()</div>
+            </div>
+          </div>
+
+          <div class="child-node">
+            <div class="comp-name">&lt;TurnBanner /&gt;</div>
+            <div class="comp-desc">ターン開始/終了アナウンスオーバーレイ（1400ms表示）</div>
+            <div class="comp-props">
+              <div class="prop-item is-prop"><span class="prop-label">prop</span> visible: bannerVisible</div>
+              <div class="prop-item is-prop"><span class="prop-label">prop</span> turn: bannerTurn</div>
+            </div>
+          </div>
+
+          <div class="child-node">
+            <div class="comp-name">&lt;LogPanel /&gt;</div>
+            <div class="comp-desc">バトルログ表示パネル（logVisibleがtrueの時のみ）</div>
+            <div class="comp-props">
+              <div class="prop-item is-prop"><span class="prop-label">prop</span> log: string[]</div>
+              <div class="prop-item is-prop"><span class="prop-label">cond</span> ⚠ logVisible === true</div>
+            </div>
+          </div>
+
+          <div class="child-node">
+            <div class="comp-name">&lt;CardChoiceModal /&gt;</div>
+            <div class="comp-desc">P018「受け流し」カード選択モーダル（pendingHandIndex !== null時）</div>
+            <div class="comp-props">
+              <div class="prop-item is-prop"><span class="prop-label">prop</span> cards: ukenagareshiVariants</div>
+              <div class="prop-item is-prop"><span class="prop-label">cond</span> ⚠ pendingHandIndex !== null</div>
+              <div class="prop-item is-cb"><span class="prop-label">↑ cb</span> onSelect(card: Card)</div>
+              <div class="prop-item is-cb"><span class="prop-label">↑ cb</span> onCancel()</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:16px;width:100%;max-width:900px;">
+          <div class="child-node" style="border-color:#ef4444;background:#1a0e0e;">
+            <div class="comp-name" style="color:#fca5a5;">&lt;div.phase-overlay /&gt;</div>
+            <div class="comp-desc">Victory / Defeat オーバーレイ（phase が Victory/Defeat の時のみ）</div>
+            <div class="comp-props" style="flex-direction:row;flex-wrap:wrap;gap:6px;margin-top:8px;">
+              <div class="prop-item" style="background:#14532d;color:#86efac;"><span class="prop-label">Victory:</span> 残りHP表示 + "Mapへ戻る" ボタン → onVictory()</div>
+              <div class="prop-item" style="background:#2d1414;color:#fca5a5;"><span class="prop-label">Defeat:</span> "タイトルへ戻る" ボタン → onDefeat()</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Section 2: State ── -->
+  <section class="section" id="sec-state">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-num">2</div>
+      <h2>State 管理 — 8 useState + 1 useRef</h2>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body">
+      <div class="state-grid">
+
+        <div class="state-card" style="grid-column:1/-1;border-color:#60a5fa;background:#1a2744;">
+          <div class="var-name">state : BattleState</div>
+          <div class="var-type">{ player, playerState, enemies[], turn, phase, log }</div>
+          <div class="var-init">初期値: initBattle(player, deck, enemies) — startHp上書き可</div>
+          <div class="var-desc">バトル全体の中心状態。gameLogic.tsの純粋関数が新stateを返し、setStateで更新する。</div>
+          <div class="var-used-by">
+            <span class="used-tag">EnemyArea</span>
+            <span class="used-tag">PlayerBar</span>
+            <span class="used-tag">CardArea</span>
+            <span class="used-tag">LogPanel</span>
+            <span class="used-tag">handleCardClick</span>
+            <span class="used-tag">handleEndTurn</span>
+            <span class="used-tag">phase-overlay</span>
+          </div>
+        </div>
+
+        <div class="state-card">
+          <div class="var-name">floats : FloatItem[]</div>
+          <div class="var-type">{ id, value, x, y }[]</div>
+          <div class="var-init">初期値: []</div>
+          <div class="var-desc">ダメージ数値のフロートアニメーション用。setTimeout 1000ms後に自動削除。</div>
+          <div class="var-used-by">
+            <span class="used-tag">EnemyArea</span>
+            <span class="used-tag">addDamageFloats()</span>
+          </div>
+        </div>
+
+        <div class="state-card">
+          <div class="var-name">isAnimating : boolean</div>
+          <div class="var-type">boolean</div>
+          <div class="var-init">初期値: false</div>
+          <div class="var-desc">カード効果ステップアニメーション中の入力ロック。trueの間はカードクリック・ターン終了を無効化する。</div>
+          <div class="var-used-by">
+            <span class="used-tag">handleCardClick (guard)</span>
+            <span class="used-tag">CardArea</span>
+          </div>
+        </div>
+
+        <div class="state-card">
+          <div class="var-name">bannerVisible : boolean</div>
+          <div class="var-type">boolean</div>
+          <div class="var-init">初期値: false</div>
+          <div class="var-desc">ターンバナーの表示フラグ。handleEndTurn後に1400ms後にfalseに戻す。</div>
+          <div class="var-used-by">
+            <span class="used-tag">TurnBanner</span>
+            <span class="used-tag">handleEndTurn</span>
+          </div>
+        </div>
+
+        <div class="state-card">
+          <div class="var-name">bannerTurn : number</div>
+          <div class="var-type">number</div>
+          <div class="var-init">初期値: 1</div>
+          <div class="var-desc">バナーに表示するターン番号。handleEndTurn内でstate.turnから更新。</div>
+          <div class="var-used-by">
+            <span class="used-tag">TurnBanner</span>
+            <span class="used-tag">handleEndTurn</span>
+          </div>
+        </div>
+
+        <div class="state-card">
+          <div class="var-name">logVisible : boolean</div>
+          <div class="var-type">boolean</div>
+          <div class="var-init">初期値: false</div>
+          <div class="var-desc">LOGボタンクリックで切り替え。LogPanelの表示/非表示を制御。</div>
+          <div class="var-used-by">
+            <span class="used-tag">LogPanel (条件)</span>
+            <span class="used-tag">LOGボタン onClick</span>
+          </div>
+        </div>
+
+        <div class="state-card">
+          <div class="var-name">pendingHandIndex : number | null</div>
+          <div class="var-type">number | null</div>
+          <div class="var-init">初期値: null</div>
+          <div class="var-desc">P018「受け流し」カードが手札のどのインデックスにあるかを保持。null以外の時 CardChoiceModal を表示。</div>
+          <div class="var-used-by">
+            <span class="used-tag">CardChoiceModal (条件)</span>
+            <span class="used-tag">handleCardClick (P018分岐)</span>
+            <span class="used-tag">handleCardChoice</span>
+          </div>
+        </div>
+
+        <div class="state-card is-ref">
+          <div class="var-name">floatCounter (useRef)</div>
+          <div class="var-type">MutableRefObject&lt;number&gt;</div>
+          <div class="var-init">初期値: 0 ← useRef(0)</div>
+          <div class="var-desc">FloatItemの一意IDをインクリメントして生成。useRefなのでリレンダリングを引き起こさない。</div>
+          <div class="var-used-by">
+            <span class="used-tag">addDamageFloats()</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Section 3: Event Flow ── -->
+  <section class="section" id="sec-flow">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-num">3</div>
+      <h2>イベントフロー — 3つのメインハンドラー</h2>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body">
+      <div class="flow-container">
+
+        <!-- handleCardClick -->
+        <div class="flow-chart">
+          <h3>handleCardClick(handIndex) — async</h3>
+          <div class="flow-step">
+            <div class="flow-node start">① CardAreaのカードをクリック</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node check">② Guard: PlayerTurn かつ isAnimating=false かつ pendingHandIndex=null かつ energy ≥ cost ?</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node branch">③ カードID判定</div>
+            <div class="flow-arrow-down" style="height:8px;"></div>
+            <div class="flow-branch-wrapper">
+              <div class="flow-branch-item">
+                <div class="flow-branch-label">P018</div>
+                <div class="flow-node action" style="font-size:9px;">setPendingHandIndex(i)<br>→ CardChoiceModal表示</div>
+              </div>
+              <div class="flow-branch-item">
+                <div class="flow-branch-label">K004/K010/K011</div>
+                <div class="flow-node action" style="font-size:9px;">playCard()で一括処理<br>（ステップ分解なし）</div>
+              </div>
+            </div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node action">標準パス: 楽観的更新<br>energy/hand即時反映</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node action">getCardEffectSteps(card) でステップ分解</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node wait">for..of EffectStep[] ループ<br>各ステップ: apply → playSE → 300ms待機</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node action">checkBattleResult()<br>addDamageFloats()<br>捨て札へ移動</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node end-ok">setState 完了</div>
+          </div>
+        </div>
+
+        <!-- handleCardChoice -->
+        <div class="flow-chart">
+          <h3>handleCardChoice(chosenCard)</h3>
+          <div class="flow-step">
+            <div class="flow-node start">① CardChoiceModalで選択</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node action">pendingHandIndex取得<br>元カード(P018)を保存</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node action">手札[pendingHandIndex]を<br>chosenCardに置換</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node action">playCard(modifiedState) で<br>選択したバリアントを使用</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node check">Victory/Defeat チェック<br>（playCard早期リターン対策）</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node action">捨て札のchosenCardを<br>元のP018に差し替え</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node action">setPendingHandIndex(null)<br>モーダルを閉じる</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node end-ok">setState 完了</div>
+          </div>
+        </div>
+
+        <!-- handleEndTurn -->
+        <div class="flow-chart">
+          <h3>handleEndTurn()</h3>
+          <div class="flow-step">
+            <div class="flow-node start">① "ターン終了" ボタンをクリック</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node action">endPlayerTurn(state)<br>→ 手札捨て・リセット処理</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node action">executeEnemyTurn(s1)<br>→ 敵行動実行</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node check">phase === 'Defeat' ?</div>
+            <div class="flow-arrow-down" style="height:8px;"></div>
+            <div class="flow-branch-wrapper">
+              <div class="flow-branch-item">
+                <div class="flow-branch-label">YES</div>
+                <div class="flow-node end-bad" style="font-size:9px;">setState(s2)<br>Defeatオーバーレイ表示</div>
+              </div>
+              <div class="flow-branch-item">
+                <div class="flow-branch-label">NO</div>
+                <div class="flow-node action" style="font-size:9px;">startPlayerTurn(s2)<br>ドロー・エネルギー回復</div>
+              </div>
+            </div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node action">setBannerTurn(nextTurn)<br>setBannerVisible(true)</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node wait">1400ms 待機</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node action">setBannerVisible(false)</div>
+            <div class="flow-arrow-down"></div>
+            <div class="flow-node end-ok">setState 完了</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Section 4: Data Flow ── -->
+  <section class="section" id="sec-dataflow">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-num">4</div>
+      <h2>データフロー — Props / Callbacks</h2>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body">
+
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;">BattleScreen が受け取る Props（from App.tsx）</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;">
+          <div class="dataflow-node">
+            <div class="node-title">player: Player</div>
+            <div class="node-detail">キャラクター設定（名前・スキル等）</div>
+          </div>
+          <div class="dataflow-node">
+            <div class="node-title">deck: Card[]</div>
+            <div class="node-detail">バトル開始時のデッキ</div>
+          </div>
+          <div class="dataflow-node">
+            <div class="node-title">enemies: Enemy[]</div>
+            <div class="node-detail">エンカウント敵リスト</div>
+          </div>
+          <div class="dataflow-node">
+            <div class="node-title">startHp?: number</div>
+            <div class="node-detail">前バトルからのHP引き継ぎ（省略時はmax HP）</div>
+          </div>
+          <div class="dataflow-node" style="border-color:var(--cb-border);background:var(--cb-bg);">
+            <div class="node-title" style="color:var(--cb-text);">onVictory(remainingHp)</div>
+            <div class="node-detail">勝利時にApp.tsxへ残HPを返す</div>
+          </div>
+          <div class="dataflow-node" style="border-color:var(--cb-border);background:var(--cb-bg);">
+            <div class="node-title" style="color:var(--cb-text);">onDefeat()</div>
+            <div class="node-detail">敗北時にApp.tsxへ通知</div>
+          </div>
+          <div class="dataflow-node">
+            <div class="node-title">bgmEnabled: boolean</div>
+            <div class="node-detail">BGM on/off 状態</div>
+          </div>
+          <div class="dataflow-node">
+            <div class="node-title">bgmVolume: number</div>
+            <div class="node-detail">BGM音量 (0.0〜1.0)</div>
+          </div>
+          <div class="dataflow-node" style="border-color:var(--cb-border);background:var(--cb-bg);">
+            <div class="node-title" style="color:var(--cb-text);">onToggleBgm / onChangeBgmVolume</div>
+            <div class="node-detail">BGM操作をApp.tsxへ委譲</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;">BattleScreen → 子コンポーネントへの主要 Props/Callbacks</div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:11px;">
+            <thead>
+              <tr style="background:var(--bg4);">
+                <th style="padding:8px 12px;text-align:left;border:1px solid var(--border);color:var(--text-muted);">子コンポーネント</th>
+                <th style="padding:8px 12px;text-align:left;border:1px solid var(--border);color:#86efac;">↓ Props</th>
+                <th style="padding:8px 12px;text-align:left;border:1px solid var(--border);color:#fed7aa;">↑ Callbacks</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--comp-text);font-family:monospace;">&lt;EnemyArea&gt;</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--props-text);">enemies (from state), floats, phase</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--text-dim);">—</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--comp-text);font-family:monospace;">&lt;PlayerBar&gt;</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--props-text);">playerState (from state), player</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--text-dim);">—</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--comp-text);font-family:monospace;">&lt;CardArea&gt;</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--props-text);">playerState, phase, isAnimating</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--cb-text);">onCardClick(i) → handleCardClick, onEndTurn → handleEndTurn</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--comp-text);font-family:monospace;">&lt;TurnBanner&gt;</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--props-text);">visible=bannerVisible, turn=bannerTurn</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--text-dim);">—</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--comp-text);font-family:monospace;">&lt;LogPanel&gt;</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--props-text);">log=state.log (条件付き)</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--text-dim);">—</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--comp-text);font-family:monospace;">&lt;CardChoiceModal&gt;</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--props-text);">cards=ukenagareshiVariants (条件付き)</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--cb-text);">onSelect → handleCardChoice, onCancel → setPendingHandIndex(null)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Section 5: External Deps ── -->
+  <section class="section" id="sec-ext">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-num">5</div>
+      <h2>外部依存マップ — インポート一覧</h2>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body">
+      <div class="ext-grid">
+
+        <div class="ext-card" style="grid-column:1/-1;">
+          <div class="ext-name">gameLogic.ts</div>
+          <div class="ext-path">src/gameLogic.ts — 純粋関数群（副作用なし）</div>
+          <div class="ext-fns">
+            <span class="fn-tag">initBattle()</span>
+            <span class="fn-tag">playCard()</span>
+            <span class="fn-tag">endPlayerTurn()</span>
+            <span class="fn-tag">executeEnemyTurn()</span>
+            <span class="fn-tag">startPlayerTurn()</span>
+            <span class="fn-tag">applyEffectToPlayer()</span>
+            <span class="fn-tag">applyEffectToTarget()</span>
+            <span class="fn-tag">checkBattleResult()</span>
+          </div>
+        </div>
+
+        <div class="ext-card">
+          <div class="ext-name">effectCategory.ts</div>
+          <div class="ext-path">src/utils/effectCategory.ts</div>
+          <div class="ext-fns">
+            <span class="fn-tag">getCardEffectSteps(card)</span>
+            <span class="fn-tag">resolveEffectCategory()</span>
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">Card を EffectStep[] に分解。ステップアニメーションの源。</div>
+        </div>
+
+        <div class="ext-card">
+          <div class="ext-name">playSE.ts</div>
+          <div class="ext-path">src/utils/playSE.ts</div>
+          <div class="ext-fns">
+            <span class="fn-tag">playSE(seKey)</span>
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">各 EffectStep ごとにSEを再生。カテゴリ→音声ファイルのマッピング。</div>
+        </div>
+
+        <div class="ext-card">
+          <div class="ext-name">useDebugApi.ts</div>
+          <div class="ext-path">src/hooks/useDebugApi.ts</div>
+          <div class="ext-fns">
+            <span class="fn-tag special">useDebugApi(setState)</span>
+          </div>
+          <div style="font-size:10px;color:var(--warn-text);margin-top:8px;">setStateをwindow経由で外部露出。デバッグ専用フック。</div>
+        </div>
+
+        <div class="ext-card">
+          <div class="ext-name">cards/normal.ts</div>
+          <div class="ext-path">src/cards/normal.ts</div>
+          <div class="ext-fns">
+            <span class="fn-tag special">ukenagareshiVariants</span>
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">P018専用。CardChoiceModalに渡す選択肢バリアント配列。</div>
+        </div>
+
+        <div class="ext-card">
+          <div class="ext-name">types.ts</div>
+          <div class="ext-path">src/types.ts</div>
+          <div class="ext-fns">
+            <span class="fn-tag">BattleState</span>
+            <span class="fn-tag">Card</span>
+            <span class="fn-tag">Enemy</span>
+            <span class="fn-tag">Player</span>
+            <span class="fn-tag">TurnPhase</span>
+            <span class="fn-tag">EffectStep</span>
+          </div>
+        </div>
+
+        <div class="ext-card">
+          <div class="ext-name">DamageNumber.tsx</div>
+          <div class="ext-path">src/components/DamageNumber.tsx</div>
+          <div class="ext-fns">
+            <span class="fn-tag">FloatItem (type only)</span>
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">コンポーネントはimportせず型のみ使用。実レンダリングはEnemyArea経由。</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Section 6: Special Paths ── -->
+  <section class="section" id="sec-special">
+    <div class="section-header" onclick="toggleSection(this)">
+      <div class="section-num">6</div>
+      <h2>特殊カードパス — 3種の例外処理</h2>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body">
+      <div class="special-grid">
+
+        <div class="special-card">
+          <div class="sp-title">SPECIAL_CARD_IDS — 一括処理パス</div>
+          <div class="sp-cards">
+            <span class="card-id">K004</span>
+            <span class="card-id">K010</span>
+            <span class="card-id">K011</span>
+          </div>
+          <div class="sp-desc">
+            getCardEffectSteps() によるステップ分解をスキップし、playCard() を1回呼ぶだけで完結する。<br><br>
+            理由: これらのカードは複数ステップのアニメーション分解に対応していない特殊な効果を持つため、
+            レガシーな単一呼び出しパスを維持している。
+          </div>
+        </div>
+
+        <div class="special-card">
+          <div class="sp-title">P018「受け流し」— モーダル選択パス</div>
+          <div class="sp-cards">
+            <span class="card-id">P018</span>
+          </div>
+          <div class="sp-desc">
+            通常のカードプレイの代わりに CardChoiceModal を表示し、プレイヤーにバリアントを選ばせる。<br><br>
+            フロー: handleCardClick → setPendingHandIndex → modal表示 → handleCardChoice →
+            手札内のP018をchosenCardに置換 → playCard() → 捨て札でP018に差し替え<br><br>
+            これにより「受け流し」の選択バリアントが永続しない（次戦でもP018として扱われる）。
+          </div>
+        </div>
+
+        <div class="special-card" style="background:var(--state-bg);border-color:var(--state-border);">
+          <div class="sp-title" style="color:var(--state-text);">楽観的UI更新パターン</div>
+          <div class="sp-desc" style="color:var(--text-muted);">
+            標準パスでは、エネルギーと手札の変更をアニメーションループ開始前に即時反映（楽観的更新）。<br><br>
+            これによりユーザーは操作後すぐにエネルギー消費・手札変化を視認でき、
+            300ms × ステップ数の待機中も UIがフリーズしていないように見える。
+          </div>
+        </div>
+
+        <div class="special-card" style="background:var(--ext-bg);border-color:var(--ext-border);">
+          <div class="sp-title" style="color:var(--ext-text);">isAnimating — 入力ロック設計</div>
+          <div class="sp-desc" style="color:var(--text-muted);">
+            async ハンドラー開始時に setIsAnimating(true)、完了時に false。<br><br>
+            handleCardClick 先頭と CardArea に両方で isAnimating チェックをすることで、
+            アニメーション中の多重クリック・ターン終了を二重に防ぐ設計。
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<button id="top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+  function toggleSection(header) {
+    header.parentElement.classList.toggle('collapsed');
+  }
+
+  // Smooth scroll for TOC links
+  document.querySelectorAll('.toc a').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        // Expand if collapsed
+        if (target.classList.contains('collapsed')) {
+          target.classList.remove('collapsed');
+        }
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // Show/hide top button
+  window.addEventListener('scroll', () => {
+    document.getElementById('top-btn').style.opacity = window.scrollY > 300 ? '1' : '0';
+  });
+  document.getElementById('top-btn').style.opacity = '0';
+  document.getElementById('top-btn').style.transition = 'opacity 0.2s';
+</script>
+</body>
+</html>

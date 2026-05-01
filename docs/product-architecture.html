@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card Game — プロダクト全体図解</title>
+<style>
+:root {
+  --bg:       #0c0e14;
+  --bg2:      #13161f;
+  --bg3:      #1a1e2b;
+  --bg4:      #222736;
+  --bg5:      #2a3045;
+  --border:   #2d3451;
+  --text:     #dce3f0;
+  --muted:    #6b7a9e;
+  --dim:      #3d4663;
+
+  /* Palette */
+  --blue:   #3b82f6; --blue-bg: #0f1e3d; --blue-t: #93c5fd;
+  --green:  #22c55e; --green-bg: #0a2418; --green-t: #86efac;
+  --orange: #f97316; --orange-bg: #2d1508; --orange-t: #fdba74;
+  --purple: #a855f7; --purple-bg: #1a0d2e; --purple-t: #d8b4fe;
+  --red:    #ef4444; --red-bg: #2d0a0a; --red-t: #fca5a5;
+  --yellow: #eab308; --yellow-bg: #2a1e03; --yellow-t: #fde047;
+  --teal:   #14b8a6; --teal-bg: #042220; --teal-t: #5eead4;
+  --pink:   #ec4899; --pink-bg: #2d0a1a; --pink-t: #f9a8d4;
+  --indigo: #6366f1; --indigo-bg: #16183a; --indigo-t: #c7d2fe;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'SF Mono','Fira Code','Cascadia Code',Consolas,monospace;font-size:12px;line-height:1.6}
+
+/* ── Header ── */
+.hdr{background:linear-gradient(135deg,#0f1520,#0c0e14);border-bottom:1px solid var(--border);padding:22px 36px;position:sticky;top:0;z-index:100}
+.hdr-title{font-size:18px;font-weight:800;letter-spacing:.06em;color:#e2e8f0}
+.hdr-title span{color:var(--indigo-t)}
+.hdr-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.hdr-badge{padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid}
+.toc{display:flex;gap:6px;padding:10px 36px;background:var(--bg2);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.toc a{padding:3px 10px;border-radius:5px;background:var(--bg3);color:var(--muted);text-decoration:none;font-size:10px;font-weight:700;border:1px solid var(--border);letter-spacing:.02em;transition:all .15s}
+.toc a:hover{background:var(--bg4);color:var(--text)}
+
+/* ── Layout ── */
+.main{max-width:1440px;margin:0 auto;padding:28px 36px}
+
+/* ── Section ── */
+.sec{margin-bottom:36px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);overflow:hidden}
+.sec-hdr{display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--bg3);cursor:pointer;user-select:none;border-bottom:1px solid var(--border);transition:background .15s}
+.sec-hdr:hover{background:var(--bg4)}
+.sec-hdr h2{font-size:13px;font-weight:800;letter-spacing:.05em;flex:1}
+.sec-num{width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:var(--bg4);color:var(--muted);border:1px solid var(--border);flex-shrink:0}
+.toggle{font-size:9px;color:var(--dim);transition:transform .2s}
+.sec-body{padding:22px 18px}
+.collapsed .sec-body{display:none}
+.collapsed .toggle{transform:rotate(-90deg)}
+
+/* ── Cards / Panels ── */
+.card{border-radius:8px;padding:14px;border:1px solid var(--border);background:var(--bg3);transition:border-color .15s}
+.card:hover{border-color:var(--dim)}
+
+/* ── Grid helpers ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.gAuto{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+
+/* ── Tags ── */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;border:1px solid}
+.tag-blue{background:var(--blue-bg);color:var(--blue-t);border-color:rgba(59,130,246,.35)}
+.tag-green{background:var(--green-bg);color:var(--green-t);border-color:rgba(34,197,94,.35)}
+.tag-orange{background:var(--orange-bg);color:var(--orange-t);border-color:rgba(249,115,22,.35)}
+.tag-purple{background:var(--purple-bg);color:var(--purple-t);border-color:rgba(168,85,247,.35)}
+.tag-red{background:var(--red-bg);color:var(--red-t);border-color:rgba(239,68,68,.35)}
+.tag-yellow{background:var(--yellow-bg);color:var(--yellow-t);border-color:rgba(234,179,8,.35)}
+.tag-teal{background:var(--teal-bg);color:var(--teal-t);border-color:rgba(20,184,166,.35)}
+.tag-pink{background:var(--pink-bg);color:var(--pink-t);border-color:rgba(236,72,153,.35)}
+.tag-indigo{background:var(--indigo-bg);color:var(--indigo-t);border-color:rgba(99,102,241,.35)}
+.tag-dim{background:var(--bg4);color:var(--muted);border-color:var(--border)}
+
+/* ── Label ── */
+.lbl{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.04em;margin-bottom:6px;text-transform:uppercase}
+
+/* ── Divider ── */
+.div{height:1px;background:var(--border);margin:14px 0}
+
+/* ────────────────────────────────────────
+   SECTION 1: GAME FLOW
+──────────────────────────────────────── */
+.flow-row{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding-bottom:8px}
+.flow-screen{display:flex;flex-direction:column;align-items:center;gap:0;flex-shrink:0}
+.flow-box{
+  min-width:130px;padding:12px 16px;border-radius:8px;text-align:center;
+  border:2px solid;position:relative;flex-shrink:0;
+}
+.flow-box .fb-name{font-size:13px;font-weight:800;letter-spacing:.04em}
+.flow-box .fb-file{font-size:9px;color:var(--muted);margin-top:3px}
+.flow-box .fb-tags{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+
+.flow-arrow-h{display:flex;align-items:center;padding:0 4px;padding-top:20px;flex-shrink:0}
+.arrow-body{height:2px;width:48px;background:var(--border);position:relative}
+.arrow-body::after{content:'▶';position:absolute;right:-8px;top:-6px;font-size:9px;color:var(--muted)}
+.arrow-label{font-size:9px;color:var(--muted);white-space:nowrap;text-align:center;margin-top:4px;max-width:80px}
+
+.flow-branch{margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:0}
+.branch-line{width:2px;height:20px;background:var(--border);position:relative}
+.branch-line::after{content:'▼';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);font-size:7px;color:var(--border)}
+.branch-box{display:flex;gap:24px;align-items:flex-start}
+.branch-item{display:flex;flex-direction:column;align-items:center;gap:0}
+.branch-lbl{font-size:9px;padding:1px 6px;border-radius:3px;margin-bottom:4px}
+
+/* ────────────────────────────────────────
+   SECTION 2: APP STATE
+──────────────────────────────────────── */
+.state-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.state-item{background:var(--blue-bg);border:1px solid rgba(59,130,246,.4);border-radius:8px;padding:12px}
+.state-item .si-name{color:var(--blue-t);font-size:13px;font-weight:700;font-family:monospace}
+.state-item .si-type{color:var(--muted);font-size:10px;margin-top:2px}
+.state-item .si-desc{color:var(--text);font-size:11px;margin-top:6px}
+.state-item .si-values{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.runstate-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+.rs-field{background:var(--bg4);border:1px solid var(--border);border-radius:6px;padding:8px;text-align:center}
+.rs-field .rf-name{font-size:10px;color:var(--muted);font-family:monospace}
+.rs-field .rf-type{font-size:11px;color:var(--text);margin-top:3px;font-weight:700}
+
+/* ────────────────────────────────────────
+   SECTION 3: CHARACTERS
+──────────────────────────────────────── */
+.chara-card{border-radius:10px;padding:18px;overflow:hidden;position:relative}
+.chara-card.princess{background:linear-gradient(135deg,#1a1130,#0f0a20);border:2px solid rgba(168,85,247,.5)}
+.chara-card.kunoichi{background:linear-gradient(135deg,#001a14,#00110e);border:2px solid rgba(20,184,166,.5)}
+.chara-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.chara-name{font-size:18px;font-weight:800;letter-spacing:.06em}
+.chara-name.p{color:var(--purple-t)}
+.chara-name.k{color:var(--teal-t)}
+.chara-hp{font-size:28px;font-weight:800}
+.chara-hp.p{color:#f9a8d4}
+.chara-hp.k{color:#5eead4}
+.chara-stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+
+.deck-bar-row{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.deck-bar{display:flex;align-items:center;gap:8px}
+.deck-bar-label{font-size:10px;font-weight:700;width:28px;text-align:right;flex-shrink:0}
+.deck-bar-fill{height:16px;border-radius:3px;display:flex;align-items:center;padding:0 6px;font-size:10px;font-weight:700;color:#fff;min-width:20px;transition:width .3s}
+.deck-bar-count{font-size:10px;color:var(--muted);margin-left:4px}
+
+.card-list{display:flex;flex-direction:column;gap:3px}
+.cl-item{display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:4px;background:rgba(0,0,0,.2)}
+.cl-cost{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;background:var(--bg4);color:var(--text);flex-shrink:0}
+.cl-name{font-size:11px;color:var(--text);flex:1}
+.cl-attr{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700}
+.attr-Attack{background:#2d1508;color:#fdba74}
+.attr-Defense{background:#0f1e3d;color:#93c5fd}
+.attr-Skill{background:#1a0d2e;color:#d8b4fe}
+.attr-Power{background:#2a1e03;color:#fde047}
+
+/* ────────────────────────────────────────
+   SECTION 4: BATTLE SYSTEM
+──────────────────────────────────────── */
+.battle-layout{display:grid;grid-template-columns:1fr 380px;gap:18px}
+.turn-loop{position:relative;padding:20px}
+.turn-phases{display:flex;flex-direction:column;gap:0;align-items:center}
+.tp-box{width:220px;padding:10px 14px;border-radius:8px;border:2px solid;text-align:center}
+.tp-arrow{display:flex;align-items:center;justify-content:center;height:36px;position:relative}
+.tp-arrow::before{content:'';position:absolute;left:50%;top:0;width:2px;height:100%;background:var(--border);transform:translateX(-50%)}
+.tp-arrow::after{content:'▼';position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:8px;color:var(--muted);z-index:1;background:var(--bg2);padding:0 2px}
+.tp-exit{display:flex;gap:12px;justify-content:center;margin-top:12px}
+.tp-exit-item{padding:6px 14px;border-radius:6px;border:1px solid;font-size:10px;font-weight:700;text-align:center}
+
+.bstate-tree{font-size:11px}
+.bst-root{padding:10px 12px;border-radius:8px;background:var(--indigo-bg);border:2px solid rgba(99,102,241,.5);color:var(--indigo-t);font-weight:700;font-size:12px;margin-bottom:8px}
+.bst-field{display:flex;flex-direction:column;gap:4px}
+.bst-item{display:flex;align-items:flex-start;gap:8px;padding:5px 8px;border-radius:5px;background:var(--bg4);border-left:2px solid var(--border)}
+.bst-item.is-major{background:var(--blue-bg);border-left-color:var(--blue)}
+.bst-key{color:var(--muted);flex-shrink:0;font-family:monospace;font-size:10px;width:110px}
+.bst-val{color:var(--text);font-size:10px;flex:1}
+.bst-sub{padding:3px 6px;margin-top:4px;display:flex;flex-direction:column;gap:3px;border-left:2px solid var(--border);margin-left:8px}
+.bst-sub-item{font-size:10px;color:var(--muted);display:flex;gap:6px}
+.bst-sub-key{color:var(--text-dim);font-family:monospace;width:100px;flex-shrink:0}
+
+/* ────────────────────────────────────────
+   SECTION 5: CARD PIPELINE
+──────────────────────────────────────── */
+.pipeline{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding-bottom:8px}
+.pipe-stage{flex-shrink:0;min-width:180px;max-width:220px;padding:14px;border-radius:8px;border:1px solid;background:var(--bg3);position:relative}
+.pipe-arrow{display:flex;align-items:center;padding:0 6px;margin-top:20px;flex-shrink:0}
+.pipe-arrow-body{height:2px;width:32px;background:var(--border);position:relative}
+.pipe-arrow-body::after{content:'▶';position:absolute;right:-8px;top:-6px;font-size:8px;color:var(--muted)}
+.pipe-stage-title{font-size:12px;font-weight:800;color:var(--text);margin-bottom:8px}
+.pipe-stage-sub{font-size:10px;color:var(--muted);margin-bottom:8px}
+.pipe-item{font-size:10px;padding:3px 6px;border-radius:3px;background:var(--bg4);margin-bottom:3px;color:var(--text-muted)}
+
+.effect-cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.ec-item{padding:8px 10px;border-radius:6px;border:1px solid;text-align:center}
+.ec-name{font-size:11px;font-weight:700}
+.ec-desc{font-size:9px;margin-top:3px;opacity:.8}
+
+/* ────────────────────────────────────────
+   SECTION 6: STATUS EFFECTS
+──────────────────────────────────────── */
+.status-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.status-item{padding:10px 12px;border-radius:7px;border:1px solid}
+.status-item .st-name{font-size:12px;font-weight:700;font-family:monospace;display:flex;align-items:center;gap:6px}
+.status-item .st-type{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700;margin-left:auto}
+.status-item .st-desc{font-size:10px;color:var(--muted);margin-top:5px}
+.buff{background:#0f1e08;border-color:rgba(34,197,94,.35)}
+.buff .st-name{color:var(--green-t)}
+.buff .st-type{background:var(--green-bg);color:var(--green-t)}
+.debuff{background:#2d0a08;border-color:rgba(239,68,68,.35)}
+.debuff .st-name{color:var(--red-t)}
+.debuff .st-type{background:var(--red-bg);color:var(--red-t)}
+.neutral{background:var(--bg3);border-color:var(--border)}
+.neutral .st-name{color:var(--blue-t)}
+.neutral .st-type{background:var(--blue-bg);color:var(--blue-t)}
+
+/* ────────────────────────────────────────
+   SECTION 7: ENEMIES
+──────────────────────────────────────── */
+.enemy-card{border-radius:10px;padding:16px;border:2px solid}
+.enemy-card.weak{background:linear-gradient(135deg,#0a1a0a,#071207);border-color:rgba(34,197,94,.4)}
+.enemy-card.strong{background:linear-gradient(135deg,#1a0f08,#120a04);border-color:rgba(249,115,22,.4)}
+.enemy-card.boss{background:linear-gradient(135deg,#1a0808,#120404);border-color:rgba(239,68,68,.5)}
+.enemy-name{font-size:16px;font-weight:800}
+.enemy-hp-bar-wrap{margin:10px 0}
+.enemy-hp-bar{height:10px;border-radius:5px;background:var(--bg4);overflow:hidden;position:relative}
+.enemy-hp-fill{height:100%;border-radius:5px}
+.enemy-actions{display:flex;flex-direction:column;gap:4px;margin-top:10px}
+.ea-row{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:4px;background:rgba(0,0,0,.2)}
+.ea-type{font-size:10px;font-weight:700;min-width:80px}
+.ea-bar-wrap{flex:1;height:8px;border-radius:4px;background:var(--bg4);overflow:hidden}
+.ea-bar{height:100%;border-radius:4px}
+.ea-pct{font-size:10px;color:var(--muted);min-width:30px;text-align:right}
+.ea-dmg{font-size:10px;color:var(--yellow-t);min-width:28px;text-align:right}
+
+/* ────────────────────────────────────────
+   SECTION 8: MAP
+──────────────────────────────────────── */
+.map-flow{display:flex;align-items:center;gap:0;overflow-x:auto;padding:20px 0}
+.map-node{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0}
+.map-node-box{width:160px;padding:14px 16px;border-radius:10px;border:2px solid;text-align:center}
+.map-node-floor{font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:700;letter-spacing:.05em}
+.map-node-enemy{font-size:15px;font-weight:800}
+.map-node-type{font-size:10px;margin-top:4px}
+.map-connector{display:flex;align-items:center;padding:0 8px;margin-bottom:28px;flex-shrink:0}
+.map-line{height:2px;width:60px;background:var(--border);position:relative}
+.map-line::after{content:'▶';position:absolute;right:-8px;top:-6px;font-size:9px;color:var(--muted)}
+
+/* ────────────────────────────────────────
+   SECTION 9: GAME LOGIC FUNCTIONS
+──────────────────────────────────────── */
+.fn-grid{display:flex;flex-direction:column;gap:6px}
+.fn-group{border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.fn-group-hdr{padding:8px 12px;background:var(--bg4);font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--muted)}
+.fn-items{padding:8px;display:flex;flex-direction:column;gap:4px}
+.fn-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:5px;background:var(--bg3);border:1px solid var(--border)}
+.fn-item:hover{border-color:var(--dim)}
+.fn-name{font-family:monospace;font-size:11px;font-weight:700;color:var(--purple-t);flex-shrink:0;min-width:180px}
+.fn-sig{font-family:monospace;font-size:10px;color:var(--muted);flex:1}
+.fn-ret{font-family:monospace;font-size:10px;padding:1px 6px;border-radius:3px;background:var(--green-bg);color:var(--green-t);flex-shrink:0}
+.fn-desc{font-size:10px;color:var(--text);min-width:200px;flex:1}
+
+/* ────────────────────────────────────────
+   SECTION 10: REWARD FLOW
+──────────────────────────────────────── */
+.reward-flow{display:flex;align-items:stretch;gap:0;justify-content:center}
+.rf-box{min-width:150px;padding:12px 14px;border-radius:8px;border:1px solid;text-align:center;flex-shrink:0}
+.rf-box .rfb-title{font-size:12px;font-weight:800;margin-bottom:6px}
+.rf-arrow-h{display:flex;align-items:center;padding:0 4px;padding-top:16px;flex-shrink:0}
+.rf-arrow-line{height:2px;width:40px;background:var(--border);position:relative}
+.rf-arrow-line::after{content:'▶';position:absolute;right:-8px;top:-6px;font-size:8px;color:var(--muted)}
+
+/* ── Sticky TOC button ── */
+#topBtn{position:fixed;bottom:20px;right:20px;width:38px;height:38px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:200;opacity:0}
+#topBtn:hover{background:var(--bg4);color:var(--text)}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .battle-layout{grid-template-columns:1fr}
+  .state-row{grid-template-columns:1fr}
+  .main{padding:16px}
+  .hdr,.toc{padding-left:16px;padding-right:16px}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-title">🃏 Card Game — <span>プロダクト全体図解</span></div>
+  <div class="hdr-meta">
+    <span class="hdr-badge tag-indigo">React + TypeScript</span>
+    <span class="hdr-badge tag-blue">2 Characters</span>
+    <span class="hdr-badge tag-teal">35 Cards (K15 + P20)</span>
+    <span class="hdr-badge tag-orange">3 Enemies / 3 Floors</span>
+    <span class="hdr-badge tag-purple">15 gameLogic functions</span>
+    <span class="hdr-badge tag-green">11 Status Effects</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#s1">1. ゲームフロー</a>
+  <a href="#s2">2. App State</a>
+  <a href="#s3">3. キャラクター</a>
+  <a href="#s4">4. バトルシステム</a>
+  <a href="#s5">5. カードパイプライン</a>
+  <a href="#s6">6. ステータスエフェクト</a>
+  <a href="#s7">7. 敵ロースター</a>
+  <a href="#s8">8. マップ</a>
+  <a href="#s9">9. gameLogic.ts</a>
+  <a href="#s10">10. 報酬フロー</a>
+</nav>
+
+<div class="main">
+
+<!-- ══════════════════════════════════════
+     SECTION 1: GAME FLOW
+══════════════════════════════════════ -->
+<section class="sec" id="s1">
+  <div class="sec-hdr" onclick="toggle(this)">
+    <div class="sec-num">1</div>
+    <h2>ゲームフロー — 全画面遷移図</h2>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="sec-body">
+
+    <div class="flow-row" style="align-items:flex-start;gap:4px;flex-wrap:wrap;row-gap:20px">
+
+      <!-- Title -->
+      <div class="flow-screen">
+        <div class="flow-box" style="background:linear-gradient(135deg,#0f1520,#0a0d18);border-color:rgba(99,102,241,.6);min-width:140px">
+          <div class="fb-name" style="color:var(--indigo-t)">TitleScreen</div>
+          <div class="fb-file">TitleScreen.tsx</div>
+          <div class="fb-tags">
+            <span class="tag tag-indigo">GAME START ボタン</span>
+            <span class="tag tag-dim">BGM controls</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-arrow-h">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="arrow-body"></div>
+          <div class="arrow-label">onStart()</div>
+        </div>
+      </div>
+
+      <!-- CharacterSelect -->
+      <div class="flow-screen">
+        <div class="flow-box" style="background:linear-gradient(135deg,#1a0d2e,#10071e);border-color:rgba(168,85,247,.6);min-width:150px">
+          <div class="fb-name" style="color:var(--purple-t)">CharacterSelect</div>
+          <div class="fb-file">CharacterSelectScreen.tsx</div>
+          <div class="fb-tags">
+            <span class="tag tag-purple">王女 / くのいち</span>
+            <span class="tag tag-dim">Enter↵ / Click×2</span>
+          </div>
+        </div>
+        <div class="flow-branch" style="margin-top:6px">
+          <div style="font-size:9px;color:var(--muted);margin-top:6px">← onBack()</div>
+        </div>
+      </div>
+
+      <div class="flow-arrow-h">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="arrow-body"></div>
+          <div class="arrow-label">onConfirm(charaKey)<br>RunState 初期化</div>
+        </div>
+      </div>
+
+      <!-- Map -->
+      <div class="flow-screen">
+        <div class="flow-box" style="background:linear-gradient(135deg,#0a1a0a,#071207);border-color:rgba(34,197,94,.6);min-width:150px">
+          <div class="fb-name" style="color:var(--green-t)">MapScreen</div>
+          <div class="fb-file">MapScreen.tsx</div>
+          <div class="fb-tags">
+            <span class="tag tag-green">3 floors</span>
+            <span class="tag tag-dim">HP / Gold 表示</span>
+          </div>
+        </div>
+        <div style="margin-top:8px;display:flex;flex-direction:column;align-items:center">
+          <div style="width:2px;height:24px;background:var(--border);position:relative">
+            <span style="position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--muted)">▼</span>
+          </div>
+          <div style="font-size:9px;color:var(--muted);margin-top:8px">onEnterBattle(node)</div>
+        </div>
+      </div>
+
+      <div class="flow-arrow-h">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="arrow-body"></div>
+          <div class="arrow-label">onEnterBattle(node)<br>敵 + deck 渡し</div>
+        </div>
+      </div>
+
+      <!-- Battle -->
+      <div class="flow-screen">
+        <div class="flow-box" style="background:linear-gradient(135deg,#1a0f08,#100905);border-color:rgba(249,115,22,.7);min-width:150px">
+          <div class="fb-name" style="color:var(--orange-t)">BattleScreen</div>
+          <div class="fb-file">BattleScreen.tsx</div>
+          <div class="fb-tags">
+            <span class="tag tag-orange">BattleState</span>
+            <span class="tag tag-dim">252 lines</span>
+          </div>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:32px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:2px;height:20px;background:rgba(34,197,94,.5)"></div>
+            <div style="font-size:9px;color:var(--green-t);text-align:center">Victory<br>onVictory(hp)</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:2px;height:20px;background:rgba(239,68,68,.5)"></div>
+            <div style="font-size:9px;color:var(--red-t);text-align:center">Defeat<br>onDefeat()</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-arrow-h" style="padding-top:12px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="arrow-body" style="background:rgba(34,197,94,.5)"></div>
+          <div class="arrow-label" style="color:var(--green-t)">Victory</div>
+        </div>
+      </div>
+
+      <!-- Reward -->
+      <div class="flow-screen">
+        <div class="flow-box" style="background:linear-gradient(135deg,#1e1a08,#14100a);border-color:rgba(234,179,8,.6);min-width:150px">
+          <div class="fb-name" style="color:var(--yellow-t)">RewardScreen</div>
+          <div class="fb-file">RewardScreen.tsx</div>
+          <div class="fb-tags">
+            <span class="tag tag-yellow">3 候補カード</span>
+            <span class="tag tag-dim">スキップ可</span>
+          </div>
+        </div>
+        <div style="margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="width:2px;height:20px;background:rgba(34,197,94,.5)"></div>
+          <div style="font-size:9px;color:var(--green-t);text-align:center">onSelect / onSkip<br>→ Map へ戻る</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- GameOver row -->
+    <div style="display:flex;align-items:center;gap:8px;margin-top:20px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--red-t);font-weight:700;padding:8px 16px;border-radius:8px;background:var(--red-bg);border:1px solid rgba(239,68,68,.4)">
+        Defeat → <strong>GameOverScreen</strong> → Floor X で力尽きた → onRestart() → Title へ
+      </div>
+      <div style="font-size:11px;color:var(--green-t);font-weight:700;padding:8px 16px;border-radius:8px;background:var(--green-bg);border:1px solid rgba(34,197,94,.4)">
+        全フロアクリア → Map で「全フロアクリア」表示（現状エンディングなし）
+      </div>
+    </div>
+
+    <!-- BGM note -->
+    <div style="margin-top:14px;padding:10px 14px;border-radius:6px;background:var(--bg4);border:1px solid var(--border);font-size:10px;color:var(--muted)">
+      🎵 <strong style="color:var(--text)">BGM:</strong> Title/CharSelect/Map → フィールドBGM（ランダム2曲）　Battle/Reward → バトルBGM　3秒クロスフェード切替
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 2: APP STATE
+══════════════════════════════════════ -->
+<section class="sec" id="s2">
+  <div class="sec-hdr" onclick="toggle(this)">
+    <div class="sec-num">2</div>
+    <h2>App State — App.tsx が管理する全状態</h2>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="sec-body">
+
+    <div class="state-row">
+      <div class="state-item">
+        <div class="si-name">gamePhase</div>
+        <div class="si-type">GamePhase (literal union)</div>
+        <div class="si-desc">現在表示中の画面を決定するメイン状態変数</div>
+        <div class="si-values">
+          <span class="tag tag-indigo">'Title'</span>
+          <span class="tag tag-purple">'CharacterSelect'</span>
+          <span class="tag tag-green">'Map'</span>
+          <span class="tag tag-orange">'Battle'</span>
+          <span class="tag tag-yellow">'Reward'</span>
+          <span class="tag tag-red">'GameOver'</span>
+        </div>
+      </div>
+
+      <div class="state-item">
+        <div class="si-name">charaKey</div>
+        <div class="si-type">'princess' | 'kunoichi'</div>
+        <div class="si-desc">選択済みキャラクター。CharacterSelect で確定、以降のセッションで参照</div>
+        <div class="si-values">
+          <span class="tag tag-purple">'princess' → 王女 HP80</span>
+          <span class="tag tag-teal">'kunoichi' → くのいち HP70</span>
+        </div>
+      </div>
+
+      <div class="state-item" style="grid-column:1/-1">
+        <div class="si-name">runState : RunState</div>
+        <div class="si-type">連戦をまたぐ永続状態 — バトルごとにHPが引き継がれる</div>
+        <div class="runstate-grid">
+          <div class="rs-field"><div class="rf-name">player</div><div class="rf-type">Player</div><div style="font-size:9px;color:var(--muted);margin-top:2px">名前・maxHP・img</div></div>
+          <div class="rs-field"><div class="rf-name">currentHp</div><div class="rf-type">number</div><div style="font-size:9px;color:var(--muted);margin-top:2px">連戦HP引き継ぎ</div></div>
+          <div class="rs-field"><div class="rf-name">currentFloor</div><div class="rf-type">number</div><div style="font-size:9px;color:var(--muted);margin-top:2px">0 → 1 → 2 → 3…</div></div>
+          <div class="rs-field"><div class="rf-name">gold</div><div class="rf-type">number</div><div style="font-size:9px;color:var(--muted);margin-top:2px">通貨（未実装）</div></div>
+          <div class="rs-field"><div class="rf-name">deck</div><div class="rf-type">Card[]</div><div style="font-size:9px;color:var(--muted);margin-top:2px">Reward毎に+1枚成長</div></div>
+        </div>
+      </div>
+
+      <div class="state-item">
+        <div class="si-name">currentNode</div>
+        <div class="si-type">MapNode | null</div>
+        <div class="si-desc">現在エントリー中のマップノード。Battle中はnon-null、それ以外はnull</div>
+        <div class="si-values"><span class="tag tag-orange">Battle中のみ set</span></div>
+      </div>
+
+      <div class="state-item">
+        <div class="si-name">rewardCandidates</div>
+        <div class="si-type">Card[]</div>
+        <div class="si-desc">Victory後に生成される報酬候補カード3枚。getRewardCandidates()で生成</div>
+        <div class="si-values"><span class="tag tag-yellow">Victory時のみ set</span><span class="tag tag-dim">デフォルト []</span></div>
+      </div>
+    </div>
+
+    <!-- Victory HP heal note -->
+    <div style="margin-top:14px;padding:10px 14px;border-radius:6px;background:var(--green-bg);border:1px solid rgba(34,197,94,.3);font-size:11px;color:var(--green-t)">
+      💚 <strong>Victory後HP回復:</strong> handleVictory(remainingHp) — 受けたダメージの最低10%を回復してRewardへ移行
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 3: CHARACTERS
+══════════════════════════════════════ -->
+<section class="sec" id="s3">
+  <div class="sec-hdr" onclick="toggle(this)">
+    <div class="sec-num">3</div>
+    <h2>キャラクター — 王女 vs くのいち</h2>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="g2">
+
+      <!-- PRINCESS -->
+      <div class="chara-card princess">
+        <div class="chara-header">
+          <div>
+            <div class="chara-name p">王女 (Princess)</div>
+            <div style="font-size:10px;color:var(--purple-t);opacity:.7;margin-top:2px">startDeckNo: 1</div>
+          </div>
+          <div style="text-align:right">
+            <div class="chara-hp p">80 HP</div>
+            <div style="font-size:10px;color:var(--muted)">maxHp</div>
+          </div>
+        </div>
+        <div class="chara-stats">
+          <span class="tag tag-purple">20 cards total (P001–P020)</span>
+          <span class="tag tag-dim">Starter: 10枚</span>
+        </div>
+
+        <div class="lbl">デッキ属性バランス</div>
+        <div class="deck-bar-row">
+          <div class="deck-bar">
+            <div class="deck-bar-label" style="color:#fdba74">ATK</div>
+            <div class="deck-bar-fill" style="width:120px;background:linear-gradient(90deg,#92400e,#d97706)">10 cards</div>
+          </div>
+          <div class="deck-bar">
+            <div class="deck-bar-label" style="color:#93c5fd">DEF</div>
+            <div class="deck-bar-fill" style="width:72px;background:linear-gradient(90deg,#1e3a5f,#3b82f6)">6 cards</div>
+          </div>
+          <div class="deck-bar">
+            <div class="deck-bar-label" style="color:#d8b4fe">SKL</div>
+            <div class="deck-bar-fill" style="width:48px;background:linear-gradient(90deg,#4c1d95,#9333ea)">4 cards</div>
+          </div>
+          <div class="deck-bar">
+            <div class="deck-bar-label" style="color:#fde047">PWR</div>
+            <div class="deck-bar-fill" style="width:12px;background:linear-gradient(90deg,#78350f,#ca8a04)">1</div>
+          </div>
+        </div>
+
+        <div class="lbl" style="margin-top:10px">スターターデッキ (10枚)</div>
+        <div class="card-list">
+          <div class="cl-item"><div class="cl-cost">1</div><div class="cl-name">飛び蹴り ×3</div><div class="cl-attr attr-Attack">ATK</div></div>
+          <div class="cl-item"><div class="cl-cost">1</div><div class="cl-name">ガード ×3</div><div class="cl-attr attr-Defense">DEF</div></div>
+          <div class="cl-item"><div class="cl-cost">2</div><div class="cl-name">ダブルスラッシュ (hit×2)</div><div class="cl-attr attr-Attack">ATK</div></div>
+          <div class="cl-item"><div class="cl-cost">2</div><div class="cl-name">アイアンシールド</div><div class="cl-attr attr-Defense">DEF</div></div>
+          <div class="cl-item"><div class="cl-cost">1</div><div class="cl-name">ドッジ</div><div class="cl-attr attr-Defense">DEF</div></div>
+          <div class="cl-item"><div class="cl-cost">1</div><div class="cl-name">受け流し <span style="font-size:9px;color:var(--yellow-t)">[P018: モーダル選択]</span></div><div class="cl-attr attr-Attack">ATK</div></div>
+        </div>
+
+        <div style="margin-top:10px;padding:8px;border-radius:6px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);font-size:10px;color:var(--purple-t)">
+          Drop pool: P001, P003–P005, P007–P020 (18枚) — Rewardで獲得可能
+        </div>
+      </div>
+
+      <!-- KUNOICHI -->
+      <div class="chara-card kunoichi">
+        <div class="chara-header">
+          <div>
+            <div class="chara-name k">くのいち (Kunoichi)</div>
+            <div style="font-size:10px;color:var(--teal-t);opacity:.7;margin-top:2px">startDeckNo: 2</div>
+          </div>
+          <div style="text-align:right">
+            <div class="chara-hp k">70 HP</div>
+            <div style="font-size:10px;color:var(--muted)">maxHp</div>
+          </div>
+        </div>
+        <div class="chara-stats">
+          <span class="tag tag-teal">15 cards total (K001–K015)</span>
+          <span class="tag tag-dim">Starter: 10枚</span>
+        </div>
+
+        <div class="lbl">デッキ属性バランス</div>
+        <div class="deck-bar-row">
+          <div class="deck-bar">
+            <div class="deck-bar-label" style="color:#fdba74">ATK</div>
+            <div class="deck-bar-fill" style="width:60px;background:linear-gradient(90deg,#92400e,#d97706)">5 cards</div>
+          </div>
+          <div class="deck-bar">
+            <div class="deck-bar-label" style="color:#93c5fd">DEF</div>
+            <div class="deck-bar-fill" style="width:12px;background:linear-gradient(90deg,#1e3a5f,#3b82f6)">1</div>
+          </div>
+          <div class="deck-bar">
+            <div class="deck-bar-label" style="color:#d8b4fe">SKL</div>
+            <div class="deck-bar-fill" style="width:72px;background:linear-gradient(90deg,#4c1d95,#9333ea)">6 cards</div>
+          </div>
+          <div class="deck-bar">
+            <div class="deck-bar-label" style="color:#fde047">PWR</div>
+            <div class="deck-bar-fill" style="width:24px;background:linear-gradient(90deg,#78350f,#ca8a04)">2</div>
+          </div>
+        </div>
+
+        <div class="lbl" style="margin-top:10px">スターターデッキ (10枚)</div>
+        <div class="card-list">
+          <div class="cl-item"><div class="cl-cost">1</div><div class="cl-name">擦り斬り ×3</div><div class="cl-attr attr-Attack">ATK</div></div>
+          <div class="cl-item"><div class="cl-cost">1</div><div class="cl-name">防御 ×3</div><div class="cl-attr attr-Defense">DEF</div></div>
+          <div class="cl-item"><div class="cl-cost">0</div><div class="cl-name">まきびし <span style="font-size:9px;color:var(--green-t)">[全体]</span></div><div class="cl-attr attr-Attack">ATK</div></div>
+          <div class="cl-item"><div class="cl-cost">2</div><div class="cl-name">妖仙火 紅糸 <span style="font-size:9px;color:var(--yellow-t)">[SPECIAL K004]</span></div><div class="cl-attr attr-Attack">ATK</div></div>
+          <div class="cl-item"><div class="cl-cost">1</div><div class="cl-name">変わり身の術</div><div class="cl-attr attr-Skill">SKL</div></div>
+          <div class="cl-item"><div class="cl-cost">1</div><div class="cl-name">壁張り付きの術</div><div class="cl-attr attr-Skill">SKL</div></div>
+        </div>
+
+        <div style="margin-top:10px;padding:8px;border-radius:6px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.2);font-size:10px;color:var(--teal-t)">
+          Drop pool: K002–K015 (13枚) — 気 (Ki) スタック戦術が特徴。K010/K011がSPECIAL
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 4: BATTLE SYSTEM
+══════════════════════════════════════ -->
+<section class="sec" id="s4">
+  <div class="sec-hdr" onclick="toggle(this)">
+    <div class="sec-num">4</div>
+    <h2>バトルシステム — ターンループ & BattleState 構造</h2>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="battle-layout">
+
+      <!-- Turn Loop -->
+      <div>
+        <div class="lbl">ターンループ</div>
+        <div class="turn-phases">
+
+          <div class="tp-box" style="background:var(--green-bg);border-color:var(--green);color:var(--green-t)">
+            <div style="font-size:11px;font-weight:800">PlayerTurn</div>
+            <div style="font-size:10px;margin-top:4px;opacity:.8">startPlayerTurn: ドロー5枚・シールドリセット・スタック減少</div>
+            <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-top:6px">
+              <span class="tag tag-green" style="font-size:9px">カードクリック → handleCardClick</span>
+              <span class="tag tag-green" style="font-size:9px">ターン終了 → handleEndTurn</span>
+            </div>
+          </div>
+
+          <div class="tp-arrow"></div>
+
+          <div class="tp-box" style="background:var(--bg4);border-color:var(--border);color:var(--text)">
+            <div style="font-size:11px;font-weight:800">endPlayerTurn()</div>
+            <div style="font-size:10px;margin-top:4px;opacity:.7">手札を捨て札へ → EnemyTurn へ遷移</div>
+          </div>
+
+          <div class="tp-arrow"></div>
+
+          <div class="tp-box" style="background:var(--red-bg);border-color:var(--red);color:var(--red-t)">
+            <div style="font-size:11px;font-weight:800">EnemyTurn</div>
+            <div style="font-size:10px;margin-top:4px;opacity:.8">executeEnemyTurn: 全敵行動 → スタック減衰 → turn++ → selectNextEnemyAction</div>
+          </div>
+
+          <div class="tp-arrow"></div>
+
+          <div class="tp-box" style="background:var(--bg4);border-color:var(--border);color:var(--text)">
+            <div style="font-size:11px;font-weight:800">checkBattleResult()</div>
+            <div style="font-size:10px;margin-top:4px;opacity:.7">全敵HP≤0 → Victory / プレイヤーHP≤0 → Defeat / それ以外 → loop</div>
+          </div>
+
+        </div>
+
+        <div class="tp-exit">
+          <div class="tp-exit-item" style="background:var(--green-bg);border-color:rgba(34,197,94,.4);color:var(--green-t)">
+            ✓ Victory<br><span style="font-size:9px">onVictory(remainingHp)</span>
+          </div>
+          <div class="tp-exit-item" style="background:var(--red-bg);border-color:rgba(239,68,68,.4);color:var(--red-t)">
+            ✕ Defeat<br><span style="font-size:9px">onDefeat()</span>
+          </div>
+        </div>
+
+        <!-- Card Play breakdown -->
+        <div style="margin-top:16px;padding:12px;border-radius:8px;background:var(--orange-bg);border:1px solid rgba(249,115,22,.35)">
+          <div class="lbl" style="color:var(--orange-t)">カードプレイ分岐 (handleCardClick)</div>
+          <div style="display:flex;flex-direction:column;gap:5px;font-size:10px">
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="tag tag-yellow" style="min-width:70px;justify-content:center">P018</span>
+              <span style="color:var(--text)">setPendingHandIndex → CardChoiceModal → handleCardChoice → 選択バリアントでplayCard → 捨て札P018に戻す</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="tag tag-orange" style="min-width:70px;justify-content:center">K004/K010/K011</span>
+              <span style="color:var(--text)">SPECIAL_CARD_IDS → playCard()を1回呼ぶ（ステップ分解なし）</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="tag tag-blue" style="min-width:70px;justify-content:center">標準</span>
+              <span style="color:var(--text)">楽観的更新 → getCardEffectSteps() → for..of ループ → apply + SE + 300ms待機 × N回</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BattleState Tree -->
+      <div>
+        <div class="lbl">BattleState 構造</div>
+        <div class="bstate-tree">
+          <div class="bst-root">BattleState (全バトルスナップショット)</div>
+          <div class="bst-field">
+
+            <div class="bst-item is-major">
+              <span class="bst-key">player: Player</span>
+              <span class="bst-val">name / maxHp / startDeckNo / img</span>
+            </div>
+
+            <div class="bst-item is-major" style="flex-direction:column;gap:4px">
+              <div style="display:flex;gap:8px">
+                <span class="bst-key">playerState:</span>
+                <span class="bst-val" style="color:var(--blue-t)">PlayerBattleState</span>
+              </div>
+              <div class="bst-sub">
+                <div class="bst-sub-item"><span class="bst-sub-key">currentHp / shield</span><span>基本戦闘ステータス</span></div>
+                <div class="bst-sub-item"><span class="bst-sub-key">currentEnergy</span><span>残りエネルギー</span></div>
+                <div class="bst-sub-item"><span class="bst-sub-key">hand / deck / discardPile</span><span>Card[] ×3</span></div>
+                <div class="bst-sub-item"><span class="bst-sub-key">attackPower / defensePower</span><span>倍率バフ</span></div>
+                <div class="bst-sub-item"><span class="bst-sub-key">ki</span><span>くのいち専用気リソース</span></div>
+                <div class="bst-sub-item"><span class="bst-sub-key">weak / vulnerable / phantom</span><span>スタック数</span></div>
+                <div class="bst-sub-item"><span class="bst-sub-key">bonusEnergy / bonusDraw</span><span>ターン加算値</span></div>
+                <div class="bst-sub-item"><span class="bst-sub-key">activePowers</span><span>string[] 有効パワー</span></div>
+              </div>
+            </div>
+
+            <div class="bst-item is-major" style="flex-direction:column;gap:4px">
+              <div style="display:flex;gap:8px">
+                <span class="bst-key">enemies[]:</span>
+                <span class="bst-val" style="color:var(--red-t)">EnemyBattleState[]</span>
+              </div>
+              <div class="bst-sub">
+                <div class="bst-sub-item"><span class="bst-sub-key">currentHp / shield</span><span>基本戦闘ステータス</span></div>
+                <div class="bst-sub-item"><span class="bst-sub-key">enemy: Enemy</span><span>元データ (name/img/actions)</span></div>
+                <div class="bst-sub-item"><span class="bst-sub-key">nextAction</span><span>次回行動の予告</span></div>
+                <div class="bst-sub-item"><span class="bst-sub-key">weak / vulnerable</span><span>デバフスタック</span></div>
+              </div>
+            </div>
+
+            <div class="bst-item"><span class="bst-key">turn: number</span><span class="bst-val">現在ターン番号</span></div>
+            <div class="bst-item"><span class="bst-key">phase: TurnPhase</span><span class="bst-val">PlayerTurn | EnemyTurn | Victory | Defeat</span></div>
+            <div class="bst-item"><span class="bst-key">log: LogEntry[]</span><span class="bst-val">{ turn, event, message, debug? } バトルログ</span></div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 5: CARD PIPELINE
+══════════════════════════════════════ -->
+<section class="sec" id="s5">
+  <div class="sec-hdr" onclick="toggle(this)">
+    <div class="sec-num">5</div>
+    <h2>カードエフェクトパイプライン — Card → EffectStep → Apply</h2>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="sec-body">
+
+    <div class="pipeline">
+
+      <div class="pipe-stage" style="border-color:rgba(99,102,241,.5);background:var(--indigo-bg)">
+        <div class="pipe-stage-title" style="color:var(--indigo-t)">Card 定義</div>
+        <div class="pipe-stage-sub">cards/*.ts</div>
+        <div class="pipe-item">id: "P005"</div>
+        <div class="pipe-item">cost: 2</div>
+        <div class="pipe-item">name: "ダブルスラッシュ"</div>
+        <div class="pipe-item">attribute: "Attack"</div>
+        <div class="pipe-item">target: "Single"</div>
+        <div class="pipe-item">hitCount: 2</div>
+        <div class="pipe-item">selfEffects: {}</div>
+        <div class="pipe-item">targetEffects: { HP: -8 }</div>
+        <div class="pipe-item">effectCategory?: EffectCategory</div>
+      </div>
+
+      <div class="pipe-arrow"><div class="pipe-arrow-body"></div></div>
+
+      <div class="pipe-stage" style="border-color:rgba(234,179,8,.5);background:var(--yellow-bg)">
+        <div class="pipe-stage-title" style="color:var(--yellow-t)">getCardEffectSteps()</div>
+        <div class="pipe-stage-sub">utils/effectCategory.ts</div>
+        <div class="pipe-item" style="color:var(--yellow-t)">selfEffects → applyTo:'player'</div>
+        <div class="pipe-item" style="color:var(--yellow-t)">targetEffects × hitCount → applyTo:'target'</div>
+        <div style="margin-top:8px;font-size:10px;color:var(--muted)">出力 EffectStep[]:</div>
+        <div class="pipe-item">{ category:'slash', effectKey:'HP', value:-8, applyTo:'target' }</div>
+        <div class="pipe-item">{ category:'slash', effectKey:'HP', value:-8, applyTo:'target' }</div>
+        <div style="font-size:9px;color:var(--yellow-t);margin-top:4px">← hitCount:2 → 2ステップに分解</div>
+      </div>
+
+      <div class="pipe-arrow"><div class="pipe-arrow-body"></div></div>
+
+      <div class="pipe-stage" style="border-color:rgba(249,115,22,.5);background:var(--orange-bg)">
+        <div class="pipe-stage-title" style="color:var(--orange-t)">for..of EffectStep[]</div>
+        <div class="pipe-stage-sub">BattleScreen.tsx handleCardClick</div>
+        <div class="pipe-item">① applyEffect to state</div>
+        <div class="pipe-item">② playSE(step.category)</div>
+        <div class="pipe-item">③ setState(newState)</div>
+        <div class="pipe-item">④ await delay(300ms)</div>
+        <div style="font-size:9px;color:var(--orange-t);margin-top:6px">← 1ステップごとに描画+SE</div>
+      </div>
+
+      <div class="pipe-arrow"><div class="pipe-arrow-body"></div></div>
+
+      <div class="pipe-stage" style="border-color:rgba(34,197,94,.5);background:var(--green-bg)">
+        <div class="pipe-stage-title" style="color:var(--green-t)">applyEffect 関数</div>
+        <div class="pipe-stage-sub">gameLogic.ts</div>
+        <div class="pipe-item">applyEffectToPlayer()</div>
+        <div class="pipe-item">applyEffectToTarget()</div>
+        <div style="margin-top:8px;font-size:10px;color:var(--muted)">target振り分け:</div>
+        <div class="pipe-item">'Player' → player</div>
+        <div class="pipe-item">'Single' → enemies[0]</div>
+        <div class="pipe-item">'All' → 全enemies</div>
+        <div class="pipe-item">'Random' → random enemy</div>
+      </div>
+
+      <div class="pipe-arrow"><div class="pipe-arrow-body"></div></div>
+
+      <div class="pipe-stage" style="border-color:rgba(59,130,246,.5);background:var(--blue-bg)">
+        <div class="pipe-stage-title" style="color:var(--blue-t)">ダメージ計算</div>
+        <div class="pipe-stage-sub">gameLogic.ts calculateDamage()</div>
+        <div class="pipe-item">base: -8</div>
+        <div class="pipe-item">attackerWeak: -25%</div>
+        <div class="pipe-item">targetVulnerable: ×1.5</div>
+        <div style="margin-top:6px;font-size:10px;color:var(--muted)">dealDamage():</div>
+        <div class="pipe-item">shield吸収 → HP減算</div>
+        <div class="pipe-item">→ addDamageFloats()</div>
+      </div>
+
+    </div>
+
+    <!-- Effect Categories -->
+    <div style="margin-top:18px">
+      <div class="lbl">EffectCategory — 8種類 (SEキー & アニメーション分類)</div>
+      <div class="effect-cat-grid">
+        <div class="ec-item" style="border-color:rgba(99,102,241,.4);background:var(--indigo-bg)">
+          <div class="ec-name" style="color:var(--indigo-t)">'lightSlash'</div>
+          <div class="ec-desc" style="color:var(--muted)">HP -1 〜 -6</div>
+        </div>
+        <div class="ec-item" style="border-color:rgba(59,130,246,.4);background:var(--blue-bg)">
+          <div class="ec-name" style="color:var(--blue-t)">'slash'</div>
+          <div class="ec-desc" style="color:var(--muted)">HP -7 〜 -19</div>
+        </div>
+        <div class="ec-item" style="border-color:rgba(249,115,22,.4);background:var(--orange-bg)">
+          <div class="ec-name" style="color:var(--orange-t)">'heavySlash'</div>
+          <div class="ec-desc" style="color:var(--muted)">HP -20 以上</div>
+        </div>
+        <div class="ec-item" style="border-color:rgba(168,85,247,.4);background:var(--purple-bg)">
+          <div class="ec-name" style="color:var(--purple-t)">'multiSlash'</div>
+          <div class="ec-desc" style="color:var(--muted)">hitCount ≥ 2</div>
+        </div>
+        <div class="ec-item" style="border-color:rgba(239,68,68,.4);background:var(--red-bg)">
+          <div class="ec-name" style="color:var(--red-t)">'aoe'</div>
+          <div class="ec-desc" style="color:var(--muted)">target='All'</div>
+        </div>
+        <div class="ec-item" style="border-color:rgba(59,130,246,.4);background:#0a1828">
+          <div class="ec-name" style="color:#7dd3fc">'shield'</div>
+          <div class="ec-desc" style="color:var(--muted)">Shield付与</div>
+        </div>
+        <div class="ec-item" style="border-color:rgba(34,197,94,.4);background:var(--green-bg)">
+          <div class="ec-name" style="color:var(--green-t)">'buff'</div>
+          <div class="ec-desc" style="color:var(--muted)">正のステータス</div>
+        </div>
+        <div class="ec-item" style="border-color:rgba(234,179,8,.4);background:var(--yellow-bg)">
+          <div class="ec-name" style="color:var(--yellow-t)">'debuff'</div>
+          <div class="ec-desc" style="color:var(--muted)">Weak / Vulnerable</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 6: STATUS EFFECTS
+══════════════════════════════════════ -->
+<section class="sec" id="s6">
+  <div class="sec-hdr" onclick="toggle(this)">
+    <div class="sec-num">6</div>
+    <h2>ステータスエフェクト — 11種類</h2>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="status-grid">
+
+      <div class="status-item neutral">
+        <div class="st-name">HP <span class="st-type">中立</span></div>
+        <div class="st-desc">HPを直接増減。負値でダメージ、正値でヒール。shield優先吸収</div>
+      </div>
+      <div class="status-item neutral">
+        <div class="st-name">Shield <span class="st-type">中立</span></div>
+        <div class="st-desc">盾値を加算。ダメージ計算時に優先的に吸収される。ターン開始時リセット</div>
+      </div>
+      <div class="status-item buff">
+        <div class="st-name">AttackPower <span class="st-type">Buff</span></div>
+        <div class="st-desc">攻撃倍率バフ。calculateDamage()の乗数として機能</div>
+      </div>
+      <div class="status-item buff">
+        <div class="st-name">DefensePower <span class="st-type">Buff</span></div>
+        <div class="st-desc">防御倍率バフ。受けるダメージを軽減</div>
+      </div>
+      <div class="status-item buff">
+        <div class="st-name">Ki <span class="st-type">Buff</span></div>
+        <div class="st-desc">くのいち専用リソース。K004の追加ダメージ源、K010でPhantomへ変換</div>
+      </div>
+      <div class="status-item buff">
+        <div class="st-name">Phantom <span class="st-type">Buff</span></div>
+        <div class="st-desc">幻影スタック。攻撃を回避するかどうかに影響（1スタック消費）</div>
+      </div>
+      <div class="status-item buff">
+        <div class="st-name">DeckDraw <span class="st-type">Buff</span></div>
+        <div class="st-desc">ターン開始時の追加ドロー枚数。bonusDrawに加算</div>
+      </div>
+      <div class="status-item buff">
+        <div class="st-name">ActionCount <span class="st-type">Buff</span></div>
+        <div class="st-desc">追加エネルギー。bonusEnergyに加算されターン開始時に付与</div>
+      </div>
+      <div class="status-item buff">
+        <div class="st-name">DiscardDraw <span class="st-type">Buff</span></div>
+        <div class="st-desc">捨て札から追加ドロー枚数を加算</div>
+      </div>
+      <div class="status-item debuff">
+        <div class="st-name">Weak <span class="st-type">Debuff</span></div>
+        <div class="st-desc">攻撃ダメージ -25%。スタック数ターン持続、毎ターン-1減衰</div>
+      </div>
+      <div class="status-item debuff">
+        <div class="st-name">Vulnerable <span class="st-type">Debuff</span></div>
+        <div class="st-desc">受けるダメージ ×1.5。スタック数ターン持続、毎ターン-1減衰</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 7: ENEMIES
+══════════════════════════════════════ -->
+<section class="sec" id="s7">
+  <div class="sec-hdr" onclick="toggle(this)">
+    <div class="sec-num">7</div>
+    <h2>敵ロースター — 3体</h2>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="g3">
+
+      <!-- Slime -->
+      <div class="enemy-card weak">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="enemy-name" style="color:var(--green-t)">スライム</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">enemyKey: slime / Floor 1</div>
+          </div>
+          <span class="tag tag-green">Weak</span>
+        </div>
+        <div class="enemy-hp-bar-wrap">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px">
+            <span>HP</span><span style="color:var(--green-t);font-weight:700">40</span>
+          </div>
+          <div class="enemy-hp-bar">
+            <div class="enemy-hp-fill" style="width:33%;background:linear-gradient(90deg,#14532d,#22c55e)"></div>
+          </div>
+        </div>
+        <div class="lbl">行動パターン</div>
+        <div class="enemy-actions">
+          <div class="ea-row">
+            <span class="ea-type" style="color:var(--red-t)">⚔ Attack</span>
+            <div class="ea-bar-wrap"><div class="ea-bar" style="width:70%;background:var(--red)"></div></div>
+            <span class="ea-pct">70%</span>
+            <span class="ea-dmg">6 dmg</span>
+          </div>
+          <div class="ea-row">
+            <span class="ea-type" style="color:var(--blue-t)">↑ Buff</span>
+            <div class="ea-bar-wrap"><div class="ea-bar" style="width:30%;background:var(--blue)"></div></div>
+            <span class="ea-pct">30%</span>
+            <span class="ea-dmg">+5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Goblin -->
+      <div class="enemy-card strong">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="enemy-name" style="color:var(--orange-t)">ゴブリン剣士</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">enemyKey: goblin / Floor 2</div>
+          </div>
+          <span class="tag tag-orange">Strong</span>
+        </div>
+        <div class="enemy-hp-bar-wrap">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px">
+            <span>HP</span><span style="color:var(--orange-t);font-weight:700">65</span>
+          </div>
+          <div class="enemy-hp-bar">
+            <div class="enemy-hp-fill" style="width:54%;background:linear-gradient(90deg,#7c2d12,#f97316)"></div>
+          </div>
+        </div>
+        <div class="lbl">行動パターン</div>
+        <div class="enemy-actions">
+          <div class="ea-row">
+            <span class="ea-type" style="color:var(--red-t)">⚔ Attack</span>
+            <div class="ea-bar-wrap"><div class="ea-bar" style="width:40%;background:var(--red)"></div></div>
+            <span class="ea-pct">40%</span>
+            <span class="ea-dmg">10 dmg</span>
+          </div>
+          <div class="ea-row">
+            <span class="ea-type" style="color:var(--yellow-t)">⚡ Quick</span>
+            <div class="ea-bar-wrap"><div class="ea-bar" style="width:40%;background:var(--yellow)"></div></div>
+            <span class="ea-pct">40%</span>
+            <span class="ea-dmg">7 dmg</span>
+          </div>
+          <div class="ea-row">
+            <span class="ea-type" style="color:var(--blue-t)">↑ Buff</span>
+            <div class="ea-bar-wrap"><div class="ea-bar" style="width:20%;background:var(--blue)"></div></div>
+            <span class="ea-pct">20%</span>
+            <span class="ea-dmg">+6</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Oni Shogun -->
+      <div class="enemy-card boss">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="enemy-name" style="color:var(--red-t)">鬼将軍</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">enemyKey: oniShogun / Floor 3</div>
+          </div>
+          <span class="tag tag-red">Boss (Elite)</span>
+        </div>
+        <div class="enemy-hp-bar-wrap">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px">
+            <span>HP</span><span style="color:var(--red-t);font-weight:700">120</span>
+          </div>
+          <div class="enemy-hp-bar">
+            <div class="enemy-hp-fill" style="width:100%;background:linear-gradient(90deg,#7f1d1d,#ef4444)"></div>
+          </div>
+        </div>
+        <div class="lbl">行動パターン</div>
+        <div class="enemy-actions">
+          <div class="ea-row">
+            <span class="ea-type" style="color:var(--red-t)">⚔ Attack</span>
+            <div class="ea-bar-wrap"><div class="ea-bar" style="width:45%;background:var(--red)"></div></div>
+            <span class="ea-pct">45%</span>
+            <span class="ea-dmg">18 dmg</span>
+          </div>
+          <div class="ea-row">
+            <span class="ea-type" style="color:var(--blue-t)">↑ Buff</span>
+            <div class="ea-bar-wrap"><div class="ea-bar" style="width:35%;background:var(--blue)"></div></div>
+            <span class="ea-pct">35%</span>
+            <span class="ea-dmg">+12</span>
+          </div>
+          <div class="ea-row">
+            <span class="ea-type" style="color:var(--yellow-t)">⚡ Quick</span>
+            <div class="ea-bar-wrap"><div class="ea-bar" style="width:20%;background:var(--yellow)"></div></div>
+            <span class="ea-pct">20%</span>
+            <span class="ea-dmg">10 dmg</span>
+          </div>
+        </div>
+        <div style="margin-top:8px;padding:5px 8px;border-radius:4px;background:rgba(239,68,68,.1);font-size:10px;color:var(--red-t)">
+          ⚠ dropTable: [] — 現状ドロップ未実装
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 8: MAP
+══════════════════════════════════════ -->
+<section class="sec" id="s8">
+  <div class="sec-hdr" onclick="toggle(this)">
+    <div class="sec-num">8</div>
+    <h2>マップ構造 — 3フロア直線進行</h2>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="sec-body">
+
+    <div class="map-flow">
+
+      <div class="map-node">
+        <div style="font-size:10px;color:var(--green-t);font-weight:700;padding:3px 10px;border-radius:4px;background:var(--green-bg);border:1px solid rgba(34,197,94,.3);margin-bottom:6px">START</div>
+        <div class="map-node-box" style="background:linear-gradient(135deg,#0a1a0a,#071207);border-color:rgba(34,197,94,.5)">
+          <div class="map-node-floor">FLOOR 1</div>
+          <div class="map-node-enemy" style="color:var(--green-t)">スライム</div>
+          <div class="map-node-type"><span class="tag tag-green">Weak</span></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px">HP: 40</div>
+        </div>
+        <div style="font-size:9px;color:var(--muted);margin-top:6px;text-align:center">currentFloor: 0 → 1<br>nodeType: 'Weak'</div>
+      </div>
+
+      <div class="map-connector">
+        <div class="map-line"></div>
+        <div style="font-size:9px;color:var(--muted);margin-top:18px;white-space:nowrap">Victory<br>+HP回復</div>
+      </div>
+
+      <div class="map-node">
+        <div class="map-node-box" style="background:linear-gradient(135deg,#1a0f08,#120a04);border-color:rgba(249,115,22,.5)">
+          <div class="map-node-floor">FLOOR 2</div>
+          <div class="map-node-enemy" style="color:var(--orange-t)">ゴブリン剣士</div>
+          <div class="map-node-type"><span class="tag tag-orange">Strong</span></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px">HP: 65</div>
+        </div>
+        <div style="font-size:9px;color:var(--muted);margin-top:6px;text-align:center">currentFloor: 1 → 2<br>nodeType: 'Strong'</div>
+      </div>
+
+      <div class="map-connector">
+        <div class="map-line"></div>
+        <div style="font-size:9px;color:var(--muted);margin-top:18px;white-space:nowrap">Victory<br>+HP回復</div>
+      </div>
+
+      <div class="map-node">
+        <div class="map-node-box" style="background:linear-gradient(135deg,#1a0808,#120404);border-color:rgba(239,68,68,.6)">
+          <div class="map-node-floor">FLOOR 3 💀</div>
+          <div class="map-node-enemy" style="color:var(--red-t)">鬼将軍</div>
+          <div class="map-node-type"><span class="tag tag-red">Boss</span></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px">HP: 120</div>
+        </div>
+        <div style="font-size:9px;color:var(--muted);margin-top:6px;text-align:center">currentFloor: 2 → 3<br>nodeType: 'Boss'</div>
+      </div>
+
+      <div class="map-connector">
+        <div class="map-line" style="background:rgba(34,197,94,.4)"></div>
+        <div style="font-size:9px;color:var(--green-t);margin-top:18px;white-space:nowrap">ALL CLEAR</div>
+      </div>
+
+      <div class="map-node">
+        <div class="map-node-box" style="background:var(--bg4);border-color:var(--border);border-style:dashed">
+          <div class="map-node-floor">全フロアクリア</div>
+          <div class="map-node-enemy" style="color:var(--muted);font-size:12px">— END —</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:6px">エンディング未実装</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Map node states -->
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+      <div style="padding:8px 12px;border-radius:6px;background:var(--green-bg);border:1px solid rgba(34,197,94,.3);font-size:10px;color:var(--green-t)">
+        <strong>cleared</strong> — currentFloor より前。通過済み表示
+      </div>
+      <div style="padding:8px 12px;border-radius:6px;background:var(--orange-bg);border:1px solid rgba(249,115,22,.3);font-size:10px;color:var(--orange-t)">
+        <strong>next</strong> — currentFloor + 1。エントリーボタンあり
+      </div>
+      <div style="padding:8px 12px;border-radius:6px;background:var(--bg4);border:1px solid var(--border);font-size:10px;color:var(--muted)">
+        <strong>future</strong> — locked。クリック不可
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 9: GAME LOGIC FUNCTIONS
+══════════════════════════════════════ -->
+<section class="sec" id="s9">
+  <div class="sec-hdr" onclick="toggle(this)">
+    <div class="sec-num">9</div>
+    <h2>gameLogic.ts — 15 エクスポート関数</h2>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="fn-grid">
+
+      <div class="fn-group">
+        <div class="fn-group-hdr">🔧 ユーティリティ</div>
+        <div class="fn-items">
+          <div class="fn-item">
+            <span class="fn-name">shuffle&lt;T&gt;</span>
+            <span class="fn-sig">(array: T[])</span>
+            <span class="fn-ret">T[]</span>
+            <span class="fn-desc">Fisher-Yates シャッフル。デッキシャッフルに使用</span>
+          </div>
+          <div class="fn-item">
+            <span class="fn-name">calculateDamage</span>
+            <span class="fn-sig">(base, attackerWeak, targetVulnerable)</span>
+            <span class="fn-ret">number</span>
+            <span class="fn-desc">最終ダメージ計算。Weak: -25%, Vulnerable: ×1.5</span>
+          </div>
+          <div class="fn-item">
+            <span class="fn-name">dealDamage</span>
+            <span class="fn-sig">(target: CombatantState, damage: number)</span>
+            <span class="fn-ret">CombatantState</span>
+            <span class="fn-desc">Shield吸収後HPへダメージ適用</span>
+          </div>
+          <div class="fn-item">
+            <span class="fn-name">addShield</span>
+            <span class="fn-sig">(target: CombatantState, shield: number)</span>
+            <span class="fn-ret">CombatantState</span>
+            <span class="fn-desc">Shield値を加算</span>
+          </div>
+          <div class="fn-item">
+            <span class="fn-name">healHp</span>
+            <span class="fn-sig">(target, amount, maxHp)</span>
+            <span class="fn-ret">CombatantState</span>
+            <span class="fn-desc">HP回復（maxHp上限）</span>
+          </div>
+          <div class="fn-item">
+            <span class="fn-name">drawCards</span>
+            <span class="fn-sig">(playerState, count: number)</span>
+            <span class="fn-ret">PlayerBattleState</span>
+            <span class="fn-desc">デッキからドロー。デッキ切れ時は捨て札をシャッフルして補充</span>
+          </div>
+          <div class="fn-item">
+            <span class="fn-name">selectNextEnemyAction</span>
+            <span class="fn-sig">(enemy: Enemy)</span>
+            <span class="fn-ret">EnemyAction</span>
+            <span class="fn-desc">確率重み付きで次の敵行動を選択</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="fn-group">
+        <div class="fn-group-hdr">⚔ バトル制御</div>
+        <div class="fn-items">
+          <div class="fn-item">
+            <span class="fn-name">initBattle</span>
+            <span class="fn-sig">(player, playerDeck, enemies)</span>
+            <span class="fn-ret">BattleState</span>
+            <span class="fn-desc">バトル初期化。デッキシャッフル・手札5枚ドロー・BattleState生成</span>
+          </div>
+          <div class="fn-item">
+            <span class="fn-name">startPlayerTurn</span>
+            <span class="fn-sig">(state: BattleState)</span>
+            <span class="fn-ret">BattleState</span>
+            <span class="fn-desc">ターン開始処理: ドロー・エネルギー回復・Shield=0・スタック-1・K011チェック</span>
+          </div>
+          <div class="fn-item">
+            <span class="fn-name">endPlayerTurn</span>
+            <span class="fn-sig">(state: BattleState)</span>
+            <span class="fn-ret">BattleState</span>
+            <span class="fn-desc">ターン終了: 手札→捨て札・phase=EnemyTurn</span>
+          </div>
+          <div class="fn-item">
+            <span class="fn-name">executeEnemyTurn</span>
+            <span class="fn-sig">(state: BattleState)</span>
+            <span class="fn-ret">BattleState</span>
+            <span class="fn-desc">全敵が行動実行。スタック減衰・turn++・次行動選択</span>
+          </div>
+          <div class="fn-item">
+            <span class="fn-name">checkBattleResult</span>
+            <span class="fn-sig">(state: BattleState)</span>
+            <span class="fn-ret">TurnPhase</span>
+            <span class="fn-desc">全敵HP≤0→Victory / プレイヤーHP≤0→Defeat / else→current</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="fn-group">
+        <div class="fn-group-hdr">🃏 カード・エフェクト適用</div>
+        <div class="fn-items">
+          <div class="fn-item">
+            <span class="fn-name">playCard</span>
+            <span class="fn-sig">(state, handIndex, targetEnemyIndex?)</span>
+            <span class="fn-ret">BattleState</span>
+            <span class="fn-desc">カードプレイ。エネルギーチェック→applyCardEffects→捨て札移動→ログ</span>
+          </div>
+          <div class="fn-item">
+            <span class="fn-name">applyCardEffects</span>
+            <span class="fn-sig">(state, card, targetEnemyIndex?)</span>
+            <span class="fn-ret">BattleState</span>
+            <span class="fn-desc">selfEffects + targetEffects適用。K004/K010/K011の特殊ロジック含む</span>
+          </div>
+          <div class="fn-item">
+            <span class="fn-name">applyEffectToPlayer</span>
+            <span class="fn-sig">(state, effect: StatusEffect, value)</span>
+            <span class="fn-ret">BattleState</span>
+            <span class="fn-desc">11種のStatusEffectをプレイヤーに適用するルーティング関数</span>
+          </div>
+          <div class="fn-item">
+            <span class="fn-name">applyEffectToTarget</span>
+            <span class="fn-sig">(state, effect, value, target, targetEnemyIndex?)</span>
+            <span class="fn-ret">BattleState</span>
+            <span class="fn-desc">Player/Single/All/Randomに応じて効果をルーティング</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:12px;padding:8px 12px;border-radius:6px;background:var(--bg4);border:1px solid var(--border);font-size:10px;color:var(--muted)">
+      ✅ 全15関数は<strong style="color:var(--text)">純粋関数（副作用なし）</strong> — 入力stateを受け取り、新stateを返す。直接mutateしない設計。
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SECTION 10: REWARD FLOW
+══════════════════════════════════════ -->
+<section class="sec" id="s10">
+  <div class="sec-hdr" onclick="toggle(this)">
+    <div class="sec-num">10</div>
+    <h2>報酬フロー & デッキ成長サイクル</h2>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="sec-body">
+
+    <div style="display:flex;align-items:stretch;gap:0;overflow-x:auto;padding-bottom:8px">
+
+      <div class="rf-box" style="border-color:rgba(249,115,22,.5);background:var(--orange-bg)">
+        <div class="rfb-title" style="color:var(--orange-t)">Battle Victory</div>
+        <div style="font-size:10px;color:var(--muted)">remainingHp を取得<br>受けたDMGの10%回復</div>
+      </div>
+
+      <div class="rf-arrow-h"><div class="rf-arrow-line"></div></div>
+
+      <div class="rf-box" style="border-color:rgba(168,85,247,.5);background:var(--purple-bg)">
+        <div class="rfb-title" style="color:var(--purple-t)">getRewardCandidates()</div>
+        <div style="font-size:10px;color:var(--muted)">utils/rewardPool.ts<br>dropCards をシャッフル<br>先頭3枚を返す</div>
+      </div>
+
+      <div class="rf-arrow-h"><div class="rf-arrow-line"></div></div>
+
+      <div class="rf-box" style="border-color:rgba(234,179,8,.5);background:var(--yellow-bg)">
+        <div class="rfb-title" style="color:var(--yellow-t)">RewardScreen</div>
+        <div style="font-size:10px;color:var(--muted)">3枚を表示<br>1枚選択 or スキップ</div>
+        <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-top:6px">
+          <span class="tag tag-yellow" style="font-size:9px">onSelect(card)</span>
+          <span class="tag tag-dim" style="font-size:9px">onSkip()</span>
+        </div>
+      </div>
+
+      <div class="rf-arrow-h"><div class="rf-arrow-line"></div></div>
+
+      <div class="rf-box" style="border-color:rgba(34,197,94,.5);background:var(--green-bg)">
+        <div class="rfb-title" style="color:var(--green-t)">RunState 更新</div>
+        <div style="font-size:10px;color:var(--muted)">deck に +1枚追加<br>currentFloor + 1<br>Map へ戻る</div>
+      </div>
+
+      <div class="rf-arrow-h"><div class="rf-arrow-line"></div></div>
+
+      <div class="rf-box" style="border-color:rgba(99,102,241,.5);background:var(--indigo-bg)">
+        <div class="rfb-title" style="color:var(--indigo-t)">次バトルへ</div>
+        <div style="font-size:10px;color:var(--muted)">成長したdeckで挑む<br>HPは引き継ぎ<br>BattleScreen startHp</div>
+      </div>
+
+    </div>
+
+    <!-- Deck growth note -->
+    <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="padding:12px;border-radius:8px;background:var(--indigo-bg);border:1px solid rgba(99,102,241,.3)">
+        <div class="lbl" style="color:var(--indigo-t)">王女 デッキ成長例</div>
+        <div style="font-size:11px;color:var(--text)">
+          Floor1前: P001×3, P006×3, P005, P007, P008, P018 (10枚)<br>
+          Floor2前: +1枚 (最大 11枚)<br>
+          Floor3前: +1枚 (最大 12枚)<br>
+          <span style="color:var(--muted)">← 厳選するほど安定したデッキに</span>
+        </div>
+      </div>
+      <div style="padding:12px;border-radius:8px;background:var(--yellow-bg);border:1px solid rgba(234,179,8,.3)">
+        <div class="lbl" style="color:var(--yellow-t)">Reward候補の決定ロジック</div>
+        <div style="font-size:11px;color:var(--text)">
+          dropCards = キャラクターのdropCards配列<br>
+          → shuffle() でランダム化<br>
+          → slice(0, 3) で3枚取得<br>
+          <span style="color:var(--muted)">← 毎回ランダムな3択。重複なし</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</div><!-- /main -->
+
+<button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+function toggle(hdr){hdr.parentElement.classList.toggle('collapsed')}
+document.querySelectorAll('.toc a').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t){if(t.classList.contains('collapsed'))t.classList.remove('collapsed');t.scrollIntoView({behavior:'smooth',block:'start'})}
+  })
+});
+const btn=document.getElementById('topBtn');
+window.addEventListener('scroll',()=>{btn.style.opacity=scrollY>200?'1':'0'});
+</script>
+</body>
+</html>
