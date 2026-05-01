@@ -23,6 +23,8 @@ export function statusToCategory(
   switch (effectKey) {
     case 'HP':
       if (value >= 0) return 'buff'; // 回復効果
+      if (card.attackElement === 'strike') return 'strike';
+      if (card.attackElement === 'fire') return 'fire';
       if (card.target === 'All') return 'aoe';
       if ((card.hitCount ?? 1) >= 2) return 'multiSlash';
       const damage = Math.abs(value);
@@ -34,14 +36,16 @@ export function statusToCategory(
     case 'Weak':
     case 'Vulnerable':
       return 'debuff';
+    case 'Phantom':
+      return 'phantom';
+    case 'DiscardDraw':
+      return 'downStatus';
     case 'AttackPower':
     case 'DefensePower':
     case 'Ki':
-    case 'Phantom':
     case 'DeckDraw':
     case 'ActionCount':
-    case 'DiscardDraw':
-      return 'buff';
+      return 'upStatus';
     default: {
       const _unreachable: never = effectKey;
       throw new Error(`statusToCategory: unhandled StatusEffect "${_unreachable}"`);
