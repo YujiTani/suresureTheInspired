@@ -1,46 +1,5 @@
-import type { Card, Rarity, StatusEffect } from '../types';
+import type { Card, Rarity } from '../types';
 import frameRera from '../assets/frames/card_Frame_Rare.png';
-
-function formatEffect(effect: StatusEffect, value: number): string {
-  switch (effect) {
-    case 'HP': return value < 0 ? `${Math.abs(value)}ダメージ` : `HP+${value}`;
-    case 'Shield': return `シールド+${value}`;
-    case 'AttackPower': return `攻撃力${value > 0 ? '+' : ''}${value}`;
-    case 'DefensePower': return `防御力${value > 0 ? '+' : ''}${value}`;
-    case 'DeckDraw': return `${value}ドロー`;
-    case 'DiscardDraw': return `捨札ドロー${value > 0 ? '+' : ''}${value}`;
-    case 'ActionCount': return `行動+${value}`;
-    case 'Ki': return `気${value > 0 ? '+' : ''}${value}`;
-    case 'Weak': return `弱体+${value}`;
-    case 'Phantom': return `分身+${value}`;
-    case 'Vulnerable': return `脆弱+${value}`;
-    default: return '';
-  }
-}
-
-// カード効果をテキスト化する関数
-// 自分にかかる効果は「自: 」をつけて表示する
-// HPのダメージは「ダメージ」として表示し、複数ヒットする場合は「×ヒット数」をつける
-// 例: HP-10の効果が2ヒットする場合は「10ダメージ × 2ヒット」と表示する
-// 
-export function formatCardEffect(card: Card): string[] {
-  const lines: string[] = [];
-
-  for (const [effect, value] of Object.entries(card.selfEffects) as [StatusEffect, number][]) {
-    const label = formatEffect(effect, value);
-    if (label) lines.push(`自: ${label}`);
-  }
-
-  for (const [effect, value] of Object.entries(card.targetEffects) as [StatusEffect, number][]) {
-    let label = formatEffect(effect, value);
-    if (effect === 'HP' && value < 0 && card.hitCount && card.hitCount > 1) {
-      label += ` × ${card.hitCount}`;
-    }
-    if (label) lines.push(label);
-  }
-
-  return lines;
-}
 
 // カードの属性をテキスト化する関数
 export function cardTypeLabel(card: Card): 'ATTACK' | 'DEFENSE' | 'SKILL' | 'POWER' {
