@@ -72,6 +72,10 @@ interface CharacterSelectScreenProps {
   bgmVolume: number;
   onToggleBgm: () => void;
   onChangeBgmVolume: (volume: number) => void;
+  seEnabled: boolean;
+  seVolume: number;
+  onToggleSe: () => void;
+  onChangeSEVolume: (volume: number) => void;
 }
 
 export function CharacterSelectScreen({
@@ -83,6 +87,10 @@ export function CharacterSelectScreen({
   bgmVolume,
   onToggleBgm,
   onChangeBgmVolume,
+  seEnabled,
+  seVolume,
+  onToggleSe,
+  onChangeSEVolume,
 }: CharacterSelectScreenProps) {
   const [selected, setSelected] = useState(initialSelected);
   const embers = useMemo(() => generateEmbers(80), []);
@@ -124,6 +132,8 @@ export function CharacterSelectScreen({
       <div className="audio-control">
         <button className="log-toggle-btn" onClick={onToggleBgm}>{bgmEnabled ? 'BGM ON' : 'BGM OFF'}</button>
         <input type="range" min={0} max={100} value={Math.round(bgmVolume * 100)} onChange={e => onChangeBgmVolume(Number(e.target.value) / 100)} />
+        <button className="log-toggle-btn" onClick={onToggleSe}>{seEnabled ? 'SE ON' : 'SE OFF'}</button>
+        <input type="range" min={0} max={100} value={Math.round(seVolume * 100)} onChange={e => onChangeSEVolume(Number(e.target.value) / 100)} />
       </div>
       <div className="cs-embers">
         {embers.map(ember => (

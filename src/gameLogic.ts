@@ -128,7 +128,7 @@ function tryDealDamageToPlayer(state: BattleState, damage: number): BattleState 
   return { ...state, playerState: dealDamage(state.playerState, damage) as PlayerBattleState };
 }
 
-function applyEffectToPlayer(state: BattleState, effect: StatusEffect, value: number): BattleState {
+export function applyEffectToPlayer(state: BattleState, effect: StatusEffect, value: number): BattleState {
   const playerState = state.playerState;
   switch (effect) {
     case 'HP':
@@ -136,7 +136,7 @@ function applyEffectToPlayer(state: BattleState, effect: StatusEffect, value: nu
         ? { ...state, playerState: dealDamage(playerState, Math.abs(value)) as PlayerBattleState }
         : { ...state, playerState: healHp(playerState, value, state.player.maxHp) as PlayerBattleState };
     case 'Shield':
-      return { ...state, playerState: addShield(playerState, value) as PlayerBattleState };
+      return { ...state, playerState: addShield(playerState, value + playerState.defensePower) as PlayerBattleState };
     case 'DeckDraw':
       return { ...state, playerState: drawCards(playerState, value) };
     case 'AttackPower':
@@ -164,11 +164,12 @@ function applyEffectToEnemy(
   enemy: EnemyBattleState,
   effect: StatusEffect,
   value: number,
-  attackerWeak: number
+  attackerWeak: number,
+  attackerAttackPower: number
 ): EnemyBattleState {
   switch (effect) {
     case 'HP': {
-      const dmg = calculateDamage(Math.abs(value), attackerWeak, enemy.vulnerable);
+      const dmg = calculateDamage(Math.abs(value) + attackerAttackPower, attackerWeak, enemy.vulnerable);
       return dealDamage(enemy, dmg) as EnemyBattleState;
     }
     case 'Weak':
@@ -180,7 +181,7 @@ function applyEffectToEnemy(
   }
 }
 
-function applyEffectToTarget(
+export function applyEffectToTarget(
   state: BattleState,
   effect: StatusEffect,
   value: number,
@@ -188,6 +189,7 @@ function applyEffectToTarget(
   targetEnemyIndex?: number
 ): BattleState {
   const attackerWeak = state.playerState.weak;
+  const attackerAttackPower = state.playerState.attackPower;
 
   switch (target) {
     case 'Player':
@@ -196,14 +198,14 @@ function applyEffectToTarget(
       const newState = addLog(state, { event: "DamageDealt", message: `全ての敵に ${effect} ${value} を適用`, debug: true })
       return {
         ...newState,
-        enemies: state.enemies.map((enemy) => applyEffectToEnemy(enemy, effect, value, attackerWeak)),
+        enemies: state.enemies.map((enemy) => applyEffectToEnemy(enemy, effect, value, attackerWeak, attackerAttackPower)),
       };
     case 'Random': {
       const idx = Math.floor(Math.random() * state.enemies.length);
       return {
         ...state,
         enemies: state.enemies.map((enemy, index) =>
-          index === idx ? applyEffectToEnemy(enemy, effect, value, attackerWeak) : enemy
+          index === idx ? applyEffectToEnemy(enemy, effect, value, attackerWeak, attackerAttackPower) : enemy
         ),
       };
     }
@@ -213,7 +215,7 @@ function applyEffectToTarget(
       return {
         ...state,
         enemies: state.enemies.map((enemy, index) =>
-          index === targetEnemyIndex ? applyEffectToEnemy(enemy, effect, value, attackerWeak) : enemy
+          index === targetEnemyIndex ? applyEffectToEnemy(enemy, effect, value, attackerWeak, attackerAttackPower) : enemy
         ),
       };
   }
@@ -243,14 +245,22 @@ export function initBattle(player: Player, playerDeck: Card[], enemies: Enemy[])
     activePowers: [],
   };
 
-  const enemyStates: EnemyBattleState[] = enemies.map((enemy) => ({
-    enemy,
-    currentHp: enemy.maxHp,
-    shield: 0,
-    nextAction: enemy.enemyActions[0] ?? null,
-    weak: 0,
-    vulnerable: 0,
-  }));
+  const enemyStates: EnemyBattleState[] = enemies.map((enemy) => {
+    const initialState: EnemyBattleState = {
+      enemy,
+      currentHp: enemy.maxHp,
+      shield: 0,
+      nextAction: null,
+      weak: 0,
+      vulnerable: 0,
+      attackPower: 0,
+      rotationIndex: 0,
+      enrageUsed: false,
+      exhausted: false,
+    };
+    const { action, stateUpdates } = selectNextEnemyAction(initialState, 1);
+    return { ...initialState, nextAction: action, ...stateUpdates };
+  });
 
   return {
     player,
@@ -391,32 +401,27 @@ export function applyCardEffects(state: BattleState, card: Card, targetEnemyInde
 
 // --- Turn Processing ---
 export function startPlayerTurn(state: BattleState): BattleState {
-  const decayed = decayStacks(state.playerState, PLAYER_DECAY_FIELDS);
-  const diffParts = buildDiffParts(state.playerState, decayed, PLAYER_DIFF_LABELS);
-  const drawCardCount = Math.max(0, INITIAL_HAND_SIZE + decayed.bonusDraw);
-  const activePowers = decayed.activePowers;
+  const playerState = state.playerState;
+  const drawCardCount = Math.max(0, INITIAL_HAND_SIZE + playerState.bonusDraw);
+  const activePowers = playerState.activePowers;
 
-  let newState = diffParts.length > 0
-    ? addLog(state, { event: 'TurnStart', message: `デバフ減衰: ${diffParts.join(', ')}`, debug: true })
-    : state;
-
-  newState = addLog(newState, {
+  let newState = addLog(state, {
     event: 'TurnStart',
-    message: `ターン ${state.turn} 開始 (ki:${decayed.ki} attackPower:${decayed.attackPower} shield:${decayed.shield})`,
+    message: `ターン ${state.turn} 開始 (ki:${playerState.ki} attackPower:${playerState.attackPower} shield:${playerState.shield})`,
   });
 
   let turnStartState: BattleState = {
     ...newState,
     playerState: {
-      ...drawCards(decayed, drawCardCount),
+      ...drawCards(playerState, drawCardCount),
       shield: 0,
-      currentEnergy: INITIAL_ENERGY + decayed.bonusEnergy,
+      currentEnergy: INITIAL_ENERGY + playerState.bonusEnergy,
       bonusEnergy: 0,
       bonusDraw: 0,
     },
   };
 
-  if (decayed.ki >= 30 && activePowers.includes("K011")) {
+  if (playerState.ki >= 30 && activePowers.includes("K011")) {
     turnStartState = applyEffectToPlayer(turnStartState, "Shield", 5);
     turnStartState = applyEffectToPlayer(turnStartState, "AttackPower", 5);
     turnStartState = { ...turnStartState, playerState: { ...turnStartState.playerState, currentEnergy: turnStartState.playerState.currentEnergy + 2 } }
@@ -426,12 +431,19 @@ export function startPlayerTurn(state: BattleState): BattleState {
 }
 
 export function endPlayerTurn(state: BattleState): BattleState {
+  const decayed = decayStacks(state.playerState, PLAYER_DECAY_FIELDS);
+  const diffParts = buildDiffParts(state.playerState, decayed, PLAYER_DIFF_LABELS);
+
+  let newState = diffParts.length > 0
+    ? addLog(state, { event: 'TurnEnd', message: `デバフ減衰: ${diffParts.join(', ')}`, debug: true })
+    : state;
+
   return {
-    ...state,
+    ...newState,
     playerState: {
-      ...state.playerState,
+      ...decayed,
       hand: [],
-      discardPile: [...state.playerState.discardPile, ...state.playerState.hand],
+      discardPile: [...decayed.discardPile, ...state.playerState.hand],
     },
     phase: 'EnemyTurn',
   };
@@ -443,7 +455,8 @@ export function executeEnemyTurn(state: BattleState): BattleState {
     enemies: state.enemies.map(enemyState => ({ ...enemyState, shield: 0 })),
   };
 
-  for (const enemyState of currentState.enemies) {
+  for (let enemyIndex = 0; enemyIndex < currentState.enemies.length; enemyIndex++) {
+    const enemyState = currentState.enemies[enemyIndex];
     if (enemyState.nextAction === null) continue;
 
     const action = enemyState.nextAction;
@@ -453,48 +466,23 @@ export function executeEnemyTurn(state: BattleState): BattleState {
       message: `${enemyState.enemy.name} が ${action.type}(${action.value}) を選択`,
     });
 
-    switch (action.type) {
-      case "Attack":
-      case "QuickAttack": {
-        const prevHp = currentState.playerState.currentHp;
-        const prevShield = currentState.playerState.shield;
-        currentState = tryDealDamageToPlayer(currentState, action.value);
-        const shieldAbsorbed = prevShield - currentState.playerState.shield;
-        const hpDmg = prevHp - currentState.playerState.currentHp;
-        currentState = addLog(currentState, {
-          event: 'DamageDealt',
-          message: `攻撃 ${action.value} → シールド ${shieldAbsorbed} 軽減 / HP -${hpDmg} (残HP: ${currentState.playerState.currentHp})`,
-        });
-        break;
-      }
-      case "Buff":
-        currentState = {
-          ...currentState,
-          enemies: currentState.enemies.map((enemy) => {
-            if (enemy === enemyState) {
-              return addShield(enemy, action.value) as EnemyBattleState;
-            }
-            return enemy;
-          }),
-        };
-        currentState = addLog(currentState, {
-          event: 'ShieldGained',
-          message: `${enemyState.enemy.name} がシールド +${action.value} 獲得`,
-        });
-        break;
-    }
+    currentState = applySingleEnemyAction(currentState, enemyIndex, action);
 
     const result = checkBattleResult(currentState);
     if (result === "Victory" || result === "Defeat") {
       return { ...currentState, phase: result };
     }
 
-    // 次の行動を決定する（selectNextEnemyAction を使う）
+    // 次の行動を決定する
+    const { action: nextAction, stateUpdates } = selectNextEnemyAction(
+      currentState.enemies[enemyIndex],
+      currentState.turn
+    );
     currentState = {
       ...currentState,
-      enemies: currentState.enemies.map((currentEnemy) =>
-        currentEnemy === enemyState
-          ? { ...currentEnemy, nextAction: selectNextEnemyAction(currentEnemy.enemy) }
+      enemies: currentState.enemies.map((currentEnemy, index) =>
+        index === enemyIndex
+          ? { ...currentEnemy, nextAction, ...stateUpdates }
           : currentEnemy
       ),
     };
@@ -520,18 +508,153 @@ export function executeEnemyTurn(state: BattleState): BattleState {
   return { ...currentState, phase: 'PlayerTurn', turn: currentState.turn + 1 };
 }
 
-export function selectNextEnemyAction(enemy: Enemy): EnemyAction {
-  const roll = Math.random();
-  let cumulative = 0;
+function applyVariance(action: EnemyAction): EnemyAction {
+  if (!action.variance) return action;
+  const roll = Math.floor(Math.random() * (action.variance * 2 + 1)) - action.variance;
+  return { ...action, value: action.value + roll };
+}
 
-  for (const action of enemy.enemyActions) {
-    cumulative += action.probability;
-    if (roll < cumulative) {
-      return action;
+function applySingleEnemyAction(state: BattleState, enemyIndex: number, action: EnemyAction): BattleState {
+  const enemyState = state.enemies[enemyIndex];
+  const enemyAttackPower = enemyState.attackPower ?? 0;
+
+  switch (action.type) {
+    case 'Attack':
+    case 'QuickAttack': {
+      const finalDamage = calculateDamage(action.value + enemyAttackPower, enemyState.weak, state.playerState.vulnerable);
+      const prevHp = state.playerState.currentHp;
+      const prevShield = state.playerState.shield;
+      let next = tryDealDamageToPlayer(state, finalDamage);
+      const shieldAbsorbed = prevShield - next.playerState.shield;
+      const hpDmg = prevHp - next.playerState.currentHp;
+      return addLog(next, {
+        event: 'DamageDealt',
+        message: `攻撃 ${action.value}→${finalDamage} → シールド ${shieldAbsorbed} 軽減 / HP -${hpDmg} (残HP: ${next.playerState.currentHp})`,
+      });
+    }
+    case 'Buff': {
+      const next = {
+        ...state,
+        enemies: state.enemies.map((enemy, index) =>
+          index === enemyIndex ? addShield(enemy, action.value) as EnemyBattleState : enemy
+        ),
+      };
+      return addLog(next, { event: 'ShieldGained', message: `${enemyState.enemy.name} がシールド +${action.value} 獲得` });
+    }
+    case 'Debuff': {
+      const stacks = Math.ceil(Math.random() * action.value);
+      let next = applyEffectToPlayer(state, 'Weak', stacks);
+      next = applyEffectToPlayer(next, 'Vulnerable', stacks);
+      return addLog(next, { event: 'EnemyAction', message: `${enemyState.enemy.name} が Weak+${stacks} / Vulnerable+${stacks} を付与` });
+    }
+    case 'SelfBuff': {
+      const next = {
+        ...state,
+        enemies: state.enemies.map((enemy, index) =>
+          index === enemyIndex
+            ? { ...enemy, attackPower: (enemy.attackPower ?? 0) + action.value } as EnemyBattleState
+            : enemy
+        ),
+      };
+      const logged = addLog(next, { event: 'EnemyAction', message: `${enemyState.enemy.name} が攻撃力 +${action.value}（合計: ${(enemyAttackPower + action.value)}）` });
+      if (!action.value2) return logged;
+      const finalDamage = calculateDamage(action.value2, enemyState.weak, state.playerState.vulnerable);
+      const prevHp = logged.playerState.currentHp;
+      const prevShield = logged.playerState.shield;
+      let attacked = tryDealDamageToPlayer(logged, finalDamage);
+      const shieldAbsorbed = prevShield - attacked.playerState.shield;
+      const hpDmg = prevHp - attacked.playerState.currentHp;
+      return addLog(attacked, { event: 'DamageDealt', message: `攻撃 ${action.value2} → シールド ${shieldAbsorbed} 軽減 / HP -${hpDmg} (残HP: ${attacked.playerState.currentHp})` });
+    }
+    case 'DrainDraw': {
+      const finalDamage = calculateDamage(action.value + enemyAttackPower, enemyState.weak, state.playerState.vulnerable);
+      const prevHp = state.playerState.currentHp;
+      const prevShield = state.playerState.shield;
+      let next = tryDealDamageToPlayer(state, finalDamage);
+      const shieldAbsorbed = prevShield - next.playerState.shield;
+      const hpDmg = prevHp - next.playerState.currentHp;
+      const drawReduction = action.value2 ?? 2;
+      next = {
+        ...next,
+        playerState: { ...next.playerState, bonusDraw: next.playerState.bonusDraw - drawReduction },
+      };
+      return addLog(next, { event: 'DamageDealt', message: `${enemyState.enemy.name} の呪い: ${action.value}→${finalDamage}ダメージ + 次ターンドロー-${drawReduction}` });
+    }
+    case 'Taunt':
+      return addLog(state, { event: 'EnemyAction', message: `${enemyState.enemy.name} があっかんべーをした！` });
+    case 'ShieldAttack': {
+      const shielded = {
+        ...state,
+        enemies: state.enemies.map((enemy, index) =>
+          index === enemyIndex ? addShield(enemy, action.value) as EnemyBattleState : enemy
+        ),
+      };
+      const logged = addLog(shielded, { event: 'ShieldGained', message: `${enemyState.enemy.name} がシールド +${action.value} 獲得` });
+      if (!action.value2) return logged;
+      const finalDamage = calculateDamage(action.value2 + enemyAttackPower, enemyState.weak, state.playerState.vulnerable);
+      const prevHp = logged.playerState.currentHp;
+      const prevShield = logged.playerState.shield;
+      let attacked = tryDealDamageToPlayer(logged, finalDamage);
+      const shieldAbsorbed = prevShield - attacked.playerState.shield;
+      const hpDmg = prevHp - attacked.playerState.currentHp;
+      return addLog(attacked, { event: 'DamageDealt', message: `攻撃 ${action.value2}→${finalDamage} → シールド ${shieldAbsorbed} 軽減 / HP -${hpDmg} (残HP: ${attacked.playerState.currentHp})` });
+    }
+    case 'DoubleAction': {
+      const candidates = enemyState.enemy.enemyActions.filter(candidateAction => candidateAction.type !== 'DoubleAction');
+      if (candidates.length === 0) return state;
+      const pickRandom = () => {
+        const roll = Math.random();
+        let cumulative = 0;
+        for (const candidateAction of candidates) {
+          cumulative += candidateAction.probability;
+          if (roll < cumulative) return applyVariance(candidateAction);
+        }
+        return applyVariance(candidates[0]);
+      };
+      let next = applySingleEnemyAction(state, enemyIndex, pickRandom());
+      if (checkBattleResult(next) !== 'PlayerTurn') return next;
+      return applySingleEnemyAction(next, enemyIndex, pickRandom());
+    }
+    default:
+      return state;
+  }
+}
+
+type NextActionResult = { action: EnemyAction; stateUpdates: Partial<EnemyBattleState> };
+
+export function selectNextEnemyAction(enemyState: EnemyBattleState, turn: number): NextActionResult {
+  const { enemy } = enemyState;
+
+  if (enemyState.exhausted) {
+    return { action: { type: 'Attack', value: 5, probability: 1 }, stateUpdates: {} };
+  }
+
+  if (enemyState.enrageUsed) {
+    return { action: { type: 'Attack', value: 5, probability: 1 }, stateUpdates: { exhausted: true } };
+  }
+
+  if (enemy.enrage) {
+    const { hpThreshold, turnThreshold } = enemy.enrage;
+    if (enemyState.currentHp <= hpThreshold || turn >= turnThreshold) {
+      return { action: { type: 'Attack', value: 100, probability: 1 }, stateUpdates: { enrageUsed: true } };
     }
   }
 
-  return enemy.enemyActions[0]
+  if (enemy.actionPattern === 'rotation') {
+    const baseAction = enemy.enemyActions[enemyState.rotationIndex % enemy.enemyActions.length];
+    const nextRotationIndex = (enemyState.rotationIndex + 1) % enemy.enemyActions.length;
+    return { action: applyVariance(baseAction), stateUpdates: { rotationIndex: nextRotationIndex } };
+  }
+
+  const roll = Math.random();
+  let cumulative = 0;
+  for (const action of enemy.enemyActions) {
+    cumulative += action.probability;
+    if (roll < cumulative) {
+      return { action: applyVariance(action), stateUpdates: {} };
+    }
+  }
+  return { action: applyVariance(enemy.enemyActions[0]), stateUpdates: {} };
 }
 
 // --- Game State Check ---

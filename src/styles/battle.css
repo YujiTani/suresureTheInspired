@@ -38,6 +38,14 @@
   80% { transform: translate(calc(-50% + 3px), -50%); }
 }
 
+@keyframes screenShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(9px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(4px); }
+}
+
 @keyframes banner {
   0%   { opacity: 0; letter-spacing: .8em; }
   20%  { opacity: 1; letter-spacing: .5em; }
@@ -103,6 +111,7 @@ body {
   position: relative; width: 100%; height: 100vh;
   overflow: hidden; padding-top: 40px;
 }
+.battle-screen.player-hit { animation: screenShake 0.4s ease-in-out; }
 
 /* ─── Enemy Area (top 40%) ─── */
 .enemy-area {
@@ -115,17 +124,33 @@ body {
 .enemy-illu-wrap {
   position: absolute; left: 50%; top: 40%;
   transform: translate(-50%, -50%);
-  width: 240px; height: 160px;
+  width: 920px; height: 420px;
+  overflow: visible;
 }
 .enemy-illu-wrap.shaking { animation: shake .4s ease-in-out; }
 
 .enemy-illu {
-  width: 100%; height: 100%;
-  display: grid; place-items: center;
-  background: radial-gradient(60% 60% at 50% 45%, #2a2340, #15112a 60%, #0a0814);
+  position: absolute; inset: 0;
+  overflow: hidden;
   border: 1px solid rgba(200,169,81,.12);
 }
+.enemy-stage-bg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0.82;
+}
+.enemy-sprite {
+  position: absolute;
+  left: 50%; top: 62%;
+  transform: translate(-50%, -50%);
+  height: 118%; width: auto;
+  object-fit: contain;
+  z-index: 1; pointer-events: none;
+}
 .illu-placeholder {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%); z-index: 2;
   font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: .3em;
   color: #514a63; text-transform: uppercase; text-align: center; line-height: 2;
 }
@@ -488,6 +513,56 @@ body {
   text-shadow: 0 0 20px rgba(224,90,72,.9), 0 2px 0 #000;
   animation: floatup 1s ease-out forwards; pointer-events: none;
 }
+.float-dmg--red {
+  color: #ff4444;
+  text-shadow: 0 0 24px rgba(255,60,60,.9), 0 2px 0 #000;
+}
+.float-dmg--blue {
+  color: #6ab4ff;
+  text-shadow: 0 0 24px rgba(74,144,217,.9), 0 2px 0 #000;
+}
+
+/* ─── Player Damage Float Layer ─── */
+.player-float-layer {
+  position: absolute;
+  left: 50%;
+  top: calc(40px + 47%);
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
+}
+.player-float-layer .float-dmg {
+  top: 0;
+}
+
+/* ─── Enemy Action UI Panel ─── */
+.enemy-action-panel {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 320px;
+  pointer-events: none;
+}
+.enemy-action-bg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.enemy-action-text {
+  position: absolute;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: .12em;
+  color: #ff8a7a;
+  text-shadow: 0 0 8px rgba(0,0,0,.95), 0 1px 0 #000;
+  white-space: nowrap;
+}
 
 /* ─── Turn Banner ─── */
 .turn-banner {
@@ -750,6 +825,21 @@ body {
 }
 .reward-skip-btn:hover { color: var(--ink-dim); border-color: #3a3250; }
 
+@keyframes reward-heal-fadeout {
+  0%   { opacity: 1; transform: translateY(0); }
+  40%  { opacity: 1; transform: translateY(-12px); }
+  100% { opacity: 0; transform: translateY(-32px); }
+}
+.reward-heal-float {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #7dff9a;
+  text-shadow: 0 0 12px rgba(125, 255, 154, 0.6);
+  animation: reward-heal-fadeout 2.4s ease-out forwards;
+  pointer-events: none;
+}
+
 /* ─── Game Over Screen ─── */
 .gameover-screen {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -868,7 +958,7 @@ body {
   background: #000;
   z-index: 9999;
   pointer-events: none;
-  transition: opacity 0.45s ease;
+  transition: opacity 1s ease;
 }
 .screen-fade.hidden { opacity: 0; }
 .screen-fade.visible { opacity: 1; }

@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { playUISE } from '../utils/playSE';
 import titleBg from '../assets/backgrounds/title-bg.png';
 
 const EMBER_COLORS = [
@@ -44,15 +45,27 @@ interface TitleScreenProps {
   bgmVolume: number;
   onToggleBgm: () => void;
   onChangeBgmVolume: (volume: number) => void;
+  seEnabled: boolean;
+  seVolume: number;
+  onToggleSe: () => void;
+  onChangeSEVolume: (volume: number) => void;
 }
 
-export function TitleScreen({ onStart, bgmEnabled, bgmVolume, onToggleBgm, onChangeBgmVolume }: TitleScreenProps) {
+export function TitleScreen({ onStart, bgmEnabled, bgmVolume, onToggleBgm, onChangeBgmVolume, seEnabled, seVolume, onToggleSe, onChangeSEVolume }: TitleScreenProps) {
   const embers = useMemo(() => generateEmbers(100), []);
+  const [fading, setFading] = useState(false);
+
+  function handleStart() {
+    if (fading) return;
+    playUISE('gameStart');
+    setFading(true);
+    setTimeout(onStart, 1000);
+  }
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
-        onStart();
+        handleStart();
       }
     }
     addEventListener('keydown', handleKeyDown);
@@ -64,6 +77,7 @@ export function TitleScreen({ onStart, bgmEnabled, bgmVolume, onToggleBgm, onCha
 
   return (
     <div className="title-screen">
+      <div className={`screen-fade ${fading ? 'visible' : 'hidden'}`} />
       <img className="title-bg" src={titleBg} alt="" />
       <div className="title-overlay" />
       <div className="title-embers">
@@ -86,7 +100,7 @@ export function TitleScreen({ onStart, bgmEnabled, bgmVolume, onToggleBgm, onCha
         ))}
       </div>
       <div className="title-content">
-        <button className="title-start-btn" onClick={onStart}>
+        <button className="title-start-btn" onClick={handleStart}>
           GAME START
         </button>
         <div className="audio-control audio-control--title">
@@ -97,6 +111,14 @@ export function TitleScreen({ onStart, bgmEnabled, bgmVolume, onToggleBgm, onCha
             max={100}
             value={Math.round(bgmVolume * 100)}
             onChange={e => onChangeBgmVolume(Number(e.target.value) / 100)}
+          />
+          <button className="log-toggle-btn" onClick={onToggleSe}>{seEnabled ? 'SE ON' : 'SE OFF'}</button>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={Math.round(seVolume * 100)}
+            onChange={e => onChangeSEVolume(Number(e.target.value) / 100)}
           />
         </div>
       </div>

@@ -1,5 +1,5 @@
 import type { Card as CardType } from '../types';
-import { cardTypeLabel, cardRarityClass, cardFrameImage, formatCardEffect } from '../utils/cardDisplay';
+import { cardTypeLabel, cardRarityClass, cardFrameImage } from '../utils/cardDisplay';
 
 interface Props {
   card: CardType;
@@ -21,7 +21,6 @@ interface Props {
 export function Card({ card, disabled, played, style, onClick }: Props) {
   const rarityClass = cardRarityClass(card);
   const typeLabel = cardTypeLabel(card);
-  const effects = formatCardEffect(card);
   const frameImage = cardFrameImage(card.rarity);
   const cardArtPositionStyle = card.cardArtPosition
     ? { top: card.cardArtPosition.top, left: card.cardArtPosition.left }
@@ -45,15 +44,12 @@ export function Card({ card, disabled, played, style, onClick }: Props) {
       <img className="card-frame" src={frameImage} alt={`${card.rarity} frame`} />
       <div className="card-cost">{card.cost}</div>
       <div className="card-category-list">
-        <div className={`card-category attack ${card.attribute === 'Attack' ? 'active' : ''}`}>ATTACK</div>
-        <div className={`card-category defense ${card.attribute === 'Defense' ? 'active' : ''}`}>DEFENSE</div>
-        <div className={`card-category skill ${card.attribute === 'Skill' ? 'active' : ''}`}>SKILL</div>
-        <div className={`card-category power ${card.attribute === 'Power' ? 'active' : ''}`}>POWER</div>
+        <div className={`card-category ${card.attribute.toLowerCase()} active`}>{typeLabel}</div>
       </div>
       <div className="card-text-panel">
         <div className="card-title">{card.name}</div>
         <div className="card-text">
-          {effects.map((line, index) => <div key={index}>{line}</div>)}
+          {card.description}
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { setSEEnabled, setSEVolume, playVictorySequence } from './utils/playSE';
 import type { Card, Player, GamePhase, MapNode, RunState } from './types';
 import { BattleScreen } from './components/BattleScreen';
 import { MapScreen } from './components/MapScreen';
@@ -12,11 +13,10 @@ import { kunoichiCards, kunoichiStarterDeck } from './cards/kunoichi';
 import princessImg from './assets/characters/princess.png';
 import kunoichiImg from './assets/characters/kunoichi.png';
 import * as enemies from './data/enemies';
-import { MAP_NODES } from './data/mapData';
+import { resolveMapNodes } from './data/mapData';
 import { getRewardCandidates } from './utils/rewardPool';
 import gardenBgm from './assets/audio/荊の庭.mp3';
 import gardenBgm2 from './assets/audio/Erica.mp3'
-import battleBgm from './assets/audio/Scramble_Line.mp3';
 import battleBgm2 from './assets/audio/Thunderbolt.mp3';
 import './styles/battle.css';
 
@@ -69,6 +69,7 @@ function initRunState(charaKey: CharaKey): RunState {
     currentFloor: 0,
     gold: 0,
     deck: resolveDeck(deck, cards),
+    mapNodes: resolveMapNodes(),
   };
 }
 
@@ -78,8 +79,11 @@ export function App() {
   const [runState, setRunState] = useState<RunState>(() => initRunState('princess'));
   const [currentNode, setCurrentNode] = useState<MapNode | null>(null);
   const [rewardCandidates, setRewardCandidates] = useState<Card[]>([]);
+  const [rewardHealedHp, setRewardHealedHp] = useState(0);
   const [bgmEnabled, setBgmEnabled] = useState(false);
-  const [bgmVolume, setBgmVolume] = useState(0.3);
+  const [bgmVolume, setBgmVolume] = useState(0.15);
+  const [seEnabled, setSeEnabled] = useState(true);
+  const [seVolume, setSeVolume] = useState(0.3);
   const fieldFadeIntervalRef = useRef<number | null>(null);
   const battleFadeIntervalRef = useRef<number | null>(null);
 
@@ -147,8 +151,10 @@ export function App() {
 
     if (inBattle) {
       fieldAudio.pause();
-      battleAudio.currentTime = 0;
-      battleAudio.volume = 0;
+      if (battleAudio.paused) {
+        battleAudio.currentTime = 0;
+        battleAudio.volume = 0;
+      }
       battleAudio.play().catch(() => undefined);
       runFade(battleAudio, bgmVolume, battleFadeIntervalRef);
       return;
@@ -164,6 +170,9 @@ export function App() {
     fieldAudio.pause();
     battleAudio.pause();
   }, [fieldAudio, battleAudio]);
+
+  useEffect(() => { setSEEnabled(seEnabled); }, [seEnabled]);
+  useEffect(() => { setSEVolume(seVolume); }, [seVolume]);
 
   function handleConfirmChara(key: string) {
     const resolvedKey = key as CharaKey;
@@ -181,11 +190,11 @@ export function App() {
     if (remainingHp <= 0) {
       throw new Error('想定外のエラー発生: 勝利後にHPが0以下になっています。');
     }
-    setRunState(prev => ({
-      ...prev,
-      currentHp: Math.min(prev.player.maxHp, Math.floor(remainingHp * 1.1)),
-    }));
+    const newHp = Math.min(runState.player.maxHp, Math.floor(remainingHp * 1.1));
+    setRewardHealedHp(newHp - remainingHp);
+    setRunState(prev => ({ ...prev, currentHp: newHp }));
     setRewardCandidates(getRewardCandidates(CHARACTERS[charaKey].cards));
+    playVictorySequence();
     setGamePhase('Reward');
   }
 
@@ -224,7 +233,7 @@ export function App() {
     : null;
 
   if (gamePhase === 'Title') {
-    return <TitleScreen onStart={() => setGamePhase('CharacterSelect')} bgmEnabled={bgmEnabled} bgmVolume={bgmVolume} onToggleBgm={() => setBgmEnabled(v => !v)} onChangeBgmVolume={setBgmVolume} />;
+    return <TitleScreen onStart={() => setGamePhase('CharacterSelect')} bgmEnabled={bgmEnabled} bgmVolume={bgmVolume} onToggleBgm={() => setBgmEnabled(v => !v)} onChangeBgmVolume={setBgmVolume} seEnabled={seEnabled} seVolume={seVolume} onToggleSe={() => setSeEnabled(v => !v)} onChangeSEVolume={setSeVolume} />;
   }
 
   if (gamePhase === 'CharacterSelect') {
@@ -238,6 +247,10 @@ export function App() {
         bgmVolume={bgmVolume}
         onToggleBgm={() => setBgmEnabled(v => !v)}
         onChangeBgmVolume={setBgmVolume}
+        seEnabled={seEnabled}
+        seVolume={seVolume}
+        onToggleSe={() => setSeEnabled(v => !v)}
+        onChangeSEVolume={setSeVolume}
       />
     );
   }
@@ -246,12 +259,16 @@ export function App() {
     return (
       <MapScreen
         runState={runState}
-        mapNodes={MAP_NODES}
+        mapNodes={runState.mapNodes}
         onEnterBattle={handleEnterBattle}
         bgmEnabled={bgmEnabled}
         bgmVolume={bgmVolume}
         onToggleBgm={() => setBgmEnabled(v => !v)}
         onChangeBgmVolume={setBgmVolume}
+        seEnabled={seEnabled}
+        seVolume={seVolume}
+        onToggleSe={() => setSeEnabled(v => !v)}
+        onChangeSEVolume={setSeVolume}
       />
     );
   }
@@ -264,12 +281,17 @@ export function App() {
         deck={runState.deck}
         enemies={[enemyForBattle]}
         startHp={runState.currentHp}
+        nodeType={currentNode?.nodeType ?? 'Weak'}
         onVictory={handleVictory}
         onDefeat={handleDefeat}
         bgmEnabled={bgmEnabled}
         bgmVolume={bgmVolume}
         onToggleBgm={() => setBgmEnabled(v => !v)}
         onChangeBgmVolume={setBgmVolume}
+        seEnabled={seEnabled}
+        seVolume={seVolume}
+        onToggleSe={() => setSeEnabled(v => !v)}
+        onChangeSEVolume={setSeVolume}
       />
     );
   }
@@ -278,6 +300,7 @@ export function App() {
     return (
       <RewardScreen
         candidates={rewardCandidates}
+        healedHp={rewardHealedHp}
         onSelect={handleSelectReward}
         onSkip={handleSkipReward}
       />
