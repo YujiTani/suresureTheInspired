@@ -46,6 +46,15 @@ export function playSE(category: EffectCategory): void {
 const victoryAchieve = new Audio(new URL('../assets/SE/SE_achieve.mp3', import.meta.url).href);
 const victoryFanfare = new Audio(new URL('../assets/SE/SE_buff_02.wav', import.meta.url).href);
 
+const enemyAttackAudio = new Audio(new URL('../assets/SE/SE_thrust_02.mp3', import.meta.url).href);
+
+export function playEnemyAttackSE(): void {
+  if (!seEnabled) return;
+  enemyAttackAudio.currentTime = 0;
+  enemyAttackAudio.volume = seVolume;
+  enemyAttackAudio.play().catch(() => {});
+}
+
 export function playVictorySequence(): void {
   if (!seEnabled) return;
   victoryAchieve.currentTime = 0;
