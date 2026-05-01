@@ -23,8 +23,8 @@ const SE_BY_CATEGORY: Record<EffectCategory, string> = {
   buff: new URL('../assets/SE/SE_buff_shine.wav', import.meta.url).href,  // ← バフSE（変更可）
   upStatus: new URL('../assets/SE/SE_buff_powerup.mp3', import.meta.url).href, // ← ステータスアップSE（変更可）
   phantom: new URL('../assets/SE/SE_buff02.mp3', import.meta.url).href, // ← ファントムSE（変更可）
-  debuff: new URL('../assets/SE/SE_debuff_01.wav', import.meta.url).href,    // ← デバフSE（変更可）
-  downStatus: new URL('../assets/SE/SE_debuff_03.wav', import.meta.url).href, // ← ステータスダウンSE（変更可）
+  debuff: new URL('../assets/SE/SE_debuff01.wav', import.meta.url).href,    // ← デバフSE（変更可）
+  downStatus: new URL('../assets/SE/SE_debuff03.wav', import.meta.url).href, // ← ステータスダウンSE（変更可）
   special: new URL('../assets/SE/SE_heavy_finisher.mp3', import.meta.url).href,
 };
 
