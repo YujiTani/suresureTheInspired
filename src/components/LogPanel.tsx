@@ -17,7 +17,6 @@ const EVENT_COLOR: Record<LogEventType, string> = {
 };
 
 export function LogPanel({ log }: Props) {
-  console.log(log)
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

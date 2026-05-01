@@ -238,10 +238,10 @@ export function BattleScreen({ player, deck, enemies, startHp, nodeType, onVicto
         setLogVisible(v => !v);
       }
     }
-    addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown);
     }
   }, [phase, playerState.hand, handleEndTurn, handleCardClick, setLogVisible, setPendingHandIndex]);
 

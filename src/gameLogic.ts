@@ -88,7 +88,7 @@ export function dealDamage(target: CombatantState, damage: number): CombatantSta
 }
 
 export function addShield(target: CombatantState, shield: number): CombatantState {
-  return { ...target, shield: target.shield + shield };
+  return { ...target, shield: Math.max(0, target.shield + shield) };
 }
 
 export function healHp(target: CombatantState, amount: number, maxHp: number): CombatantState {
@@ -292,6 +292,7 @@ export function drawCards(playerState: PlayerBattleState, count: number): Player
 }
 
 export function playCard(state: BattleState, handIndex: number, targetEnemyIndex?: number): BattleState {
+  if (handIndex < 0 || handIndex >= state.playerState.hand.length) return state;
   const card = state.playerState.hand[handIndex];
 
   if (state.playerState.currentEnergy < card.cost) {
@@ -350,11 +351,14 @@ function applyYousenkaBeniIto(state: BattleState, targetEnemyIndex?: number): Ba
 }
 
 function applyOboromiNoJutsu(state: BattleState): BattleState {
-  // 気の蓄積がない場合は何もしない
-  if (state.playerState.ki <= 0) return state;
+  let newPlayerState = { ...state.playerState, attackPower: state.playerState.attackPower + 1 };
 
-  const phantomStack = state.playerState.ki;
-  return { ...state, playerState: { ...state.playerState, ki: 0, phantom: state.playerState.phantom + phantomStack, attackPower: state.playerState.attackPower + 1 } }
+  if (newPlayerState.ki > 0) {
+    const phantomStack = newPlayerState.ki;
+    newPlayerState = { ...newPlayerState, ki: 0, phantom: newPlayerState.phantom + phantomStack };
+  }
+
+  return { ...state, playerState: newPlayerState };
 }
 
 function applyKariNoYoru(state: BattleState): BattleState {
@@ -363,6 +367,14 @@ function applyKariNoYoru(state: BattleState): BattleState {
     ...state,
     playerState: { ...state.playerState, activePowers: [...state.playerState.activePowers, 'K011'] },
   };
+}
+
+function applyShienNoHebi(state: BattleState): BattleState {
+  const consumed = Math.min(state.playerState.ki, 3);
+  let newState = { ...state, playerState: { ...state.playerState, ki: state.playerState.ki - consumed } };
+  newState = applyEffectToTarget(newState, "Weak", 3, "All");
+  newState = applyEffectToTarget(newState, "Vulnerable", 3, "All");
+  return newState;
 }
 
 function applySpecialCardEffect(
@@ -375,6 +387,7 @@ function applySpecialCardEffect(
     case 'K004': return applyYousenkaBeniIto(loggedState, targetEnemyIndex);
     case 'K010': return applyOboromiNoJutsu(loggedState);
     case 'K011': return applyKariNoYoru(loggedState);
+    case 'K013': return applyShienNoHebi(loggedState);
     default: return null;
   }
 }

@@ -68,12 +68,12 @@ export function TitleScreen({ onStart, bgmEnabled, bgmVolume, onToggleBgm, onCha
         handleStart();
       }
     }
-    addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown);
     }
-  }, [onStart]);
+  }, [fading, onStart]);
 
   return (
     <div className="title-screen">

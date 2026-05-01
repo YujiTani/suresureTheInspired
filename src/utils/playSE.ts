@@ -43,13 +43,15 @@ export function playSE(category: EffectCategory): void {
 
 // --- 勝利演出音 ---
 
-const victoryAchieve = new Audio(new URL('../assets/SE/SE_achieve.mp3', import.meta.url).href);
-const victoryFanfare = new Audio(new URL('../assets/SE/SE_buff_02.wav', import.meta.url).href);
-
-const enemyAttackAudio = new Audio(new URL('../assets/SE/SE_thrust_02.mp3', import.meta.url).href);
+let victoryAchieve: HTMLAudioElement | null = null;
+let victoryFanfare: HTMLAudioElement | null = null;
+let enemyAttackAudio: HTMLAudioElement | null = null;
 
 export function playEnemyAttackSE(): void {
   if (!seEnabled) return;
+  if (!enemyAttackAudio) {
+    enemyAttackAudio = new Audio(new URL('../assets/SE/SE_thrust_02.mp3', import.meta.url).href);
+  }
   enemyAttackAudio.currentTime = 0;
   enemyAttackAudio.volume = seVolume;
   enemyAttackAudio.play().catch(() => {});
@@ -57,12 +59,20 @@ export function playEnemyAttackSE(): void {
 
 export function playVictorySequence(): void {
   if (!seEnabled) return;
+  if (!victoryAchieve) {
+    victoryAchieve = new Audio(new URL('../assets/SE/SE_achieve.mp3', import.meta.url).href);
+  }
+  if (!victoryFanfare) {
+    victoryFanfare = new Audio(new URL('../assets/SE/SE_buff_02.wav', import.meta.url).href);
+  }
+  const fanfare = victoryFanfare;
+  const capturedVolume = seVolume;
   victoryAchieve.currentTime = 0;
-  victoryAchieve.volume = seVolume;
+  victoryAchieve.volume = capturedVolume;
   victoryAchieve.onended = () => {
-    victoryFanfare.currentTime = 0;
-    victoryFanfare.volume = seVolume;
-    victoryFanfare.play().catch(() => { });
+    fanfare.currentTime = 0;
+    fanfare.volume = seVolume;
+    fanfare.play().catch(() => { });
   };
   victoryAchieve.play().catch(() => { });
 }

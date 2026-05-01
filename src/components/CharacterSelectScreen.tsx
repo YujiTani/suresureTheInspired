@@ -106,9 +106,15 @@ export function CharacterSelectScreen({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') {
-        setSelected(characters[1].key);
+        setSelected(prev => {
+          const currentIndex = characters.findIndex(c => c.key === prev);
+          return characters[(currentIndex + 1) % characters.length].key;
+        });
       } else if (e.key === 'ArrowLeft') {
-        setSelected(characters[0].key);
+        setSelected(prev => {
+          const currentIndex = characters.findIndex(c => c.key === prev);
+          return characters[(currentIndex - 1 + characters.length) % characters.length].key;
+        });
       } else if (e.key === 'Enter') {
         onConfirm(selected);
       } else if (e.key === 'Escape') {

@@ -36,7 +36,7 @@ export function CardArea({ hand, deckCount, discardCount, currentEnergy, playedI
           const lift = Math.abs(spread) * 28;
           return (
             <Card
-              key={card.id + i}
+              key={`${card.id}-${i}`}
               card={card}
               disabled={phase !== 'PlayerTurn' || currentEnergy < card.cost}
               played={playedIndex === i}

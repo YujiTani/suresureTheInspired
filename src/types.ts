@@ -33,7 +33,7 @@ export type EffectCategory =
   | 'downStatus'
   | 'special';
 export type StatusEffect = 'HP' | 'Shield' | 'AttackPower' | 'DefensePower' | 'DeckDraw' | 'DiscardDraw' | 'ActionCount' | 'Ki' | 'Weak' | 'Phantom' | 'Vulnerable';
-export type buffStatusEffect = Omit<StatusEffect, 'HP' | 'Shield' | 'Weak' | 'Vulnerable'>;
+export type buffStatusEffect = Exclude<StatusEffect, 'HP' | 'Shield' | 'Weak' | 'Vulnerable'>;
 export type debuffStatusEffect = Extract<StatusEffect, 'Weak' | 'Vulnerable'>;
 export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic';
 export type TurnPhase = 'PlayerTurn' | 'EnemyTurn' | 'Victory' | 'Defeat';

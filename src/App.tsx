@@ -37,7 +37,10 @@ const CHARACTERS: Record<CharaKey, { player: Player; cards: Card[]; deck: string
 };
 
 function resolveDeck(deckIds: string[], cards: Card[]): Card[] {
-  return deckIds.map(id => cards.find(card => card.id === id)!).filter(Boolean);
+  return deckIds.flatMap(id => {
+    const card = cards.find(card => card.id === id);
+    return card ? [card] : [];
+  });
 }
 
 const CHARA_OPTIONS: CharaOption[] = [
