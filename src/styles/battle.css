@@ -408,11 +408,11 @@ body {
 /* cost badge — below frame so the frame's circle ornament acts as the border */
 .card-cost {
   position: absolute;
-  top: 11px;
-  left: 11px;
+  top: 13px;
+  left: 6px;
   z-index: 2;
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   display: grid; place-items: center;
   background: radial-gradient(circle at 35% 30%, #ffd27a, #f39c12 45%, #7a4a08 100%);
@@ -440,7 +440,7 @@ body {
 
 .card-category {
   position: absolute;
-  top: 22px;
+  top: 20px;
   z-index: 4;
   font-family: var(--font-display-en); font-weight: 700;
   font-size: 9px;
@@ -449,15 +449,16 @@ body {
 }
 .card-category.attack  {
   color: #ffb3a7;
-  right: 20px;
+  right: 18px;
 }
 .card-category.defense {
   color: #6cbf7d;
-  right: 18px;
+  right: 15px;
+  font-size: 8px;
 }
 .card-category.skill   {
   color: #7ab0e0;
-  right: 26px;
+  right: 24px;
 }
 .card-category.power   {
   color: #c084fc;
