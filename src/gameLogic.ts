@@ -568,11 +568,7 @@ function applySingleEnemyAction(state: BattleState, enemyIndex: number, action: 
     }
     case 'DrainDraw': {
       const finalDamage = calculateDamage(action.value + enemyAttackPower, enemyState.weak, state.playerState.vulnerable);
-      const prevHp = state.playerState.currentHp;
-      const prevShield = state.playerState.shield;
       let next = tryDealDamageToPlayer(state, finalDamage);
-      const shieldAbsorbed = prevShield - next.playerState.shield;
-      const hpDmg = prevHp - next.playerState.currentHp;
       const drawReduction = action.value2 ?? 2;
       next = {
         ...next,
