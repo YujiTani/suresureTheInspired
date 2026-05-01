@@ -1259,3 +1259,149 @@ body {
 .cs-deck-attr-bar.cs-attr-defense { background: #6cbf7d; }
 .cs-deck-attr-bar.cs-attr-skill   { background: #7ab0e0; }
 .cs-deck-attr-bar.cs-attr-power   { background: #c084fc; }
+
+/* ─── Mobile Landscape Layout (battle screen) ─── */
+@media (orientation: landscape) and (max-height: 500px) {
+  .game-header {
+    padding: 4px 10px;
+    gap: 8px;
+  }
+
+  .battle-screen {
+    padding-top: 30px;
+  }
+
+  .enemy-area {
+    top: 30px;
+    height: 42%;
+    padding-bottom: 2px;
+  }
+
+  .enemy-illu-wrap {
+    width: min(68vw, 620px);
+    height: min(32vh, 230px);
+    top: 56%;
+  }
+
+  .enemy-name {
+    font-size: 15px;
+    letter-spacing: .18em;
+  }
+
+  .hp-wrap {
+    gap: 6px;
+  }
+
+  .hp-bar {
+    width: min(42vw, 180px);
+    height: 14px;
+  }
+
+  .hp-text {
+    font-size: 11px;
+  }
+
+  .player-bar {
+    top: calc(30px + 42%);
+    height: 14%;
+    padding: 0 20px;
+  }
+
+  .stats-left { gap: 12px; }
+
+  .stat-glyph {
+    width: 18px;
+    height: 18px;
+  }
+
+  .stat-value {
+    font-size: 13px;
+  }
+
+  .status-grid {
+    gap: 4px;
+  }
+
+  .status-badge {
+    padding: 4px 8px;
+  }
+
+  .card-area {
+    top: calc(30px + 56%);
+  }
+
+  .hand {
+    bottom: 6px;
+    width: 100%;
+    height: 44vh;
+    max-height: 200px;
+    padding: 0 90px;
+  }
+
+  .card {
+    width: clamp(92px, 14.5vw, 126px);
+    margin: 0 -8px;
+  }
+
+  .card:hover {
+    transform: translateY(-22px) scale(1.03) rotate(0deg) !important;
+  }
+
+  .card.selected {
+    transform: translateY(-28px) scale(1.05) rotate(0deg) !important;
+  }
+
+  .pile {
+    bottom: 14px;
+  }
+
+  .pile.draw-pile { left: 14px; }
+  .pile.discard-pile { right: 14px; }
+
+  .pile-icon {
+    width: 30px;
+    height: 40px;
+  }
+
+  .pile-count {
+    font-size: 12px;
+  }
+
+  .end-turn-btn {
+    right: 18px;
+    bottom: 16px;
+    padding: 7px 12px;
+    letter-spacing: .2em;
+  }
+
+  .log-panel {
+    top: 36px;
+    bottom: 88px;
+    width: 180px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 430px) {
+  .enemy-area {
+    height: 40%;
+  }
+
+  .player-bar {
+    top: calc(30px + 40%);
+    height: 13%;
+  }
+
+  .card-area {
+    top: calc(30px + 53%);
+  }
+
+  .hand {
+    max-height: 170px;
+    padding: 0 84px;
+  }
+
+  .card {
+    width: clamp(84px, 13vw, 112px);
+    margin: 0 -7px;
+  }
+}
