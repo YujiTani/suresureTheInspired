@@ -218,6 +218,7 @@ export function BattleScreen({ player, deck, enemies, startHp, nodeType, onVicto
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.repeat) return;
       // E キーでターン終了
       if (e.key === 'e' || e.key === 'E') {
         handleEndTurn();
